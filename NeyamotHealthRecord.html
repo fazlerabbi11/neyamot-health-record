@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Neyamot Health Record</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+:root{
+  --teal:#0d7c6e;--teal2:#1aab98;--teal3:#0a6659;--teal-light:#e6f4f2;
+  --red:#e53e3e;--red-light:#fff5f5;--amber:#d97706;--amber-light:#fffbeb;
+  --purple:#7c3aed;--purple-light:#f5f3ff;--green:#059669;--green-light:#ecfdf5;
+  --g9:#1a202c;--g7:#374151;--g5:#6b7280;--g3:#d1d5db;--g1:#f3f4f6;
+  --bg:#f0f7f6;--r:14px;--sh:0 2px 14px rgba(13,124,110,.10);
+  --f:'Hind Siliguri',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--g9);min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:72px}
+
+/* ── AUTH ── */
+#auth-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0a6659,#0d7c6e 50%,#1aab98);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:28px}
+.auth-logo{font-size:52px;margin-bottom:12px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.2))}
+.auth-appname{font-size:28px;font-weight:700;color:#fff;letter-spacing:.5px}
+.auth-tagline{font-size:13px;color:rgba(255,255,255,.75);margin-top:4px;margin-bottom:32px;text-align:center;line-height:1.6}
+.auth-card{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.auth-tabs{display:flex;background:var(--g1);border-radius:10px;padding:3px;margin-bottom:20px;gap:3px}
+.auth-tab{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;color:var(--g5);transition:all .2s}
+.auth-tab.active{background:#fff;color:var(--teal);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.auth-input{width:100%;border:1.5px solid var(--g3);border-radius:10px;padding:12px 14px;font-size:14px;font-family:var(--f);outline:none;margin-bottom:12px;transition:border-color .2s}
+.auth-input:focus{border-color:var(--teal)}
+.auth-btn{width:100%;background:var(--teal);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--f);margin-top:4px}
+.auth-btn:active{background:var(--teal3)}
+.auth-btn:disabled{background:var(--g3);cursor:not-allowed}
+.auth-err{background:#fee2e2;color:#991b1b;border-radius:8px;padding:9px 12px;font-size:12px;margin-top:10px;display:none}
+.auth-err.show{display:block}
+.auth-loading{text-align:center;font-size:13px;color:var(--g5);margin-top:10px}
+/* PIN BOXES */
+.pin-box{width:56px;height:60px;border:2px solid var(--g3);border-radius:12px;font-size:24px;font-weight:700;text-align:center;color:var(--teal);outline:none;transition:border-color .2s;background:#fff;-webkit-text-security:disc;font-family:var(--f)}
+.pin-box:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,124,110,.12)}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,#0a6659,#0d7c6e 55%,#1aab98);color:#fff;padding:14px 16px 20px;position:sticky;top:0;z-index:100}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo-wrap{display:flex;align-items:center;gap:8px}
+.logo-icon{width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.app-name{font-size:16px;font-weight:700}
+.app-sub{font-size:10px;opacity:.72;margin-top:1px}
+.hdr-actions{display:flex;gap:6px;align-items:center}
+.hdr-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:18px;padding:5px 10px;font-size:11px;font-weight:600;color:#fff;cursor:pointer}
+.search-wrap{position:relative}
+.search-wrap input{width:100%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);border-radius:10px;padding:9px 14px 9px 34px;color:#fff;font-size:13px;font-family:var(--f);outline:none}
+.search-wrap input::placeholder{color:rgba(255,255,255,.55)}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.65}
+
+/* ── TABS ── */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--g1);position:sticky;top:106px;z-index:99;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:58px;padding:9px 4px;text-align:center;font-size:10.5px;font-weight:500;color:var(--g5);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;font-family:var(--f)}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:700}
+.tab-ico{font-size:14px;display:block;margin-bottom:1px}
+
+/* ── LAYOUT ── */
+.pg{display:none;padding:14px}.pg.active{display:block}
+.pg-nopad{display:none;padding:0}.pg-nopad.active{display:block}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.scard{background:#fff;border-radius:var(--r);padding:11px;box-shadow:var(--sh);display:flex;align-items:center;gap:9px}
+.sico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.snum{font-size:20px;font-weight:700;color:var(--teal);line-height:1}
+.slbl{font-size:10px;color:var(--g5);margin-top:2px}
+
+/* ── ALERT ── */
+.alert{background:var(--red-light);border:1px solid #fca5a5;border-radius:11px;padding:11px;margin-bottom:13px;display:flex;gap:8px}
+.alert-ico{font-size:17px;flex-shrink:0;margin-top:1px}
+.alert-title{font-size:11.5px;font-weight:700;color:var(--red)}
+.alert-body{font-size:11px;color:#7f1d1d;margin-top:2px;line-height:1.6}
+
+/* ── SECTION ── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.sec-title{font-size:14px;font-weight:700}
+.btn-add{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--f);display:flex;align-items:center;gap:3px}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:var(--r);padding:13px;box-shadow:var(--sh);margin-bottom:9px;cursor:pointer;border-left:4px solid transparent}
+.card:active{transform:scale(.99)}
+.card.doc{border-left-color:var(--teal)}.card.med{border-left-color:var(--amber)}.card.tst{border-left-color:var(--purple)}.card.dis{border-left-color:var(--red)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start}
+.card-title{font-size:13.5px;font-weight:700}
+.card-sub{font-size:11px;color:var(--teal2);font-weight:500;margin-top:2px}
+.card-date{font-size:10px;color:var(--g5);white-space:nowrap;margin-left:8px}
+.card-body{font-size:11.5px;color:var(--g7);margin-top:5px;line-height:1.6}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:18px}
+.tag.g{background:var(--teal-light);color:var(--teal)}.tag.a{background:var(--amber-light);color:var(--amber)}.tag.p{background:var(--purple-light);color:var(--purple)}.tag.r{background:var(--red-light);color:var(--red)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 20px;color:var(--g5)}
+.empty-ico{font-size:42px;margin-bottom:9px}
+.empty p{font-size:12.5px;line-height:1.7}
+
+/* ── MODALS ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:200;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:18px;max-height:90vh;overflow-y:auto;animation:up .25s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:36px;height:4px;background:var(--g3);border-radius:2px;margin:0 auto 14px}
+.mtitle{font-size:15px;font-weight:700;margin-bottom:13px}
+.fgrp{margin-bottom:11px}
+label{font-size:11.5px;font-weight:600;color:var(--g7);display:block;margin-bottom:4px}
+input,textarea,select{width:100%;border:1.5px solid var(--g3);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--f);color:var(--g9);outline:none;transition:border-color .2s;background:#fff}
+input:focus,textarea:focus,select:focus{border-color:var(--teal)}
+textarea{resize:vertical;min-height:70px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mbtn{width:100%;border:none;border-radius:11px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--f);margin-top:6px}
+.mbtn.primary{background:var(--teal);color:#fff}
+.mbtn.cancel{background:var(--g1);color:var(--g7);font-size:13px}
+.mbtn.danger{background:var(--red);color:#fff;font-size:13px}
+
+/* ── DETAIL ── */
+.drow{display:flex;gap:9px;margin-bottom:9px}
+.dlbl{font-size:11px;color:var(--g5);min-width:82px}
+.dval{font-size:13px;font-weight:500;flex:1}
+.div{height:1px;background:var(--g1);margin:9px 0}
+
+/* ── PROFILE ── */
+.prof-card{background:linear-gradient(135deg,#0a6659,#1aab98);border-radius:var(--r);padding:16px;color:#fff;margin-bottom:13px;display:flex;align-items:center;gap:11px}
+.ava{width:52px;height:52px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.pname{font-size:16px;font-weight:700}
+.pmeta{font-size:11px;opacity:.82;margin-top:2px}
+.bbadge{background:var(--red);color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block;margin-top:4px}
+.ilist{background:#fff;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:13px;overflow:hidden}
+.iitem{display:flex;align-items:center;padding:11px 13px;border-bottom:1px solid var(--g1)}
+.iitem:last-child{border-bottom:none}
+.iico{width:32px;height:32px;border-radius:8px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;font-size:14px;margin-right:9px;flex-shrink:0}
+.ilbl{font-size:10px;color:var(--g5)}
+.ival{font-size:12.5px;font-weight:600}
+.logout-btn{width:100%;background:var(--red-light);color:var(--red);border:1px solid #fca5a5;border-radius:11px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--f);margin-top:8px}
+
+/* ── AI CHAT ── */
+.ai-hdr{background:linear-gradient(135deg,var(--purple),#9f67fa);color:#fff;padding:13px 15px;display:flex;align-items:center;gap:9px}
+.ai-ava{width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.disc{background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:9px 11px;margin:11px;font-size:11px;color:#78350f;line-height:1.6;display:flex;gap:7px}
+.qbtns{display:flex;flex-wrap:wrap;gap:5px;padding:7px 11px 3px}
+.qbtn{background:var(--purple-light);color:var(--purple);border:1px solid #ddd6fe;border-radius:18px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--f)}
+.msgs{padding:11px;display:flex;flex-direction:column;gap:9px;min-height:260px;max-height:calc(100vh - 360px);overflow-y:auto}
+.msg{max-width:88%;padding:10px 12px;border-radius:13px;font-size:12.5px;line-height:1.65}
+.msg.user{background:var(--teal);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.msg.ai{background:#fff;color:var(--g9);align-self:flex-start;border-bottom-left-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.msg.ai .mlbl{font-size:10px;color:var(--purple);font-weight:700;margin-bottom:3px}
+.msg.thinking{background:var(--purple-light);color:var(--purple)}
+.chat-bar{padding:9px 11px;background:#fff;border-top:1px solid var(--g1);display:flex;gap:7px;align-items:flex-end;position:sticky;bottom:72px}
+.chat-inp{flex:1;border:1.5px solid var(--g3);border-radius:20px;padding:9px 13px;font-size:13px;font-family:var(--f);outline:none;resize:none;max-height:85px;overflow-y:auto}
+.chat-inp:focus{border-color:var(--purple)}
+.send-btn{width:38px;height:38px;background:var(--purple);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
+.send-btn:disabled{background:var(--g3);cursor:not-allowed}
+
+/* ── LIFESTYLE ── */
+.ls-hdr{background:linear-gradient(135deg,#065f46,#059669);color:#fff;padding:13px 15px;display:flex;align-items:center;gap:9px}
+.ls-gen{width:100%;background:linear-gradient(135deg,#065f46,#059669);color:#fff;border:none;border-radius:11px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--f);display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:11px}
+.ls-score{background:linear-gradient(135deg,#065f46,#059669);border-radius:var(--r);padding:18px;color:#fff;text-align:center;margin-bottom:11px}
+.ls-num{font-size:46px;font-weight:700;line-height:1}
+.ls-slbl{font-size:11px;opacity:.85;margin-top:3px}
+.ls-card{background:#fff;border-radius:var(--r);padding:13px;box-shadow:var(--sh);margin-bottom:9px}
+.ls-ctitle{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.ls-body{font-size:12px;color:var(--g7);line-height:1.75}
+.ls-body ul{padding-left:15px}
+.ls-body li{margin-bottom:3px}
+.ls-spin{font-size:30px;animation:spin 1.2s linear infinite;display:block;margin-bottom:9px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── PDF BTN ── */
+.pdf-btn{width:100%;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none;border-radius:11px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--f);display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--g1);display:flex;padding:5px 0 10px;z-index:100;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;padding:3px}
+.ni-ico{font-size:18px}
+.ni-lbl{font-size:9px;color:var(--g5);font-family:var(--f)}
+.ni.active .ni-lbl{color:var(--teal);font-weight:700}
+.ni.ai-ni.active .ni-lbl{color:var(--purple)}
+.ni.ls-ni.active .ni-lbl{color:var(--green)}
+.ndot{width:5px;height:5px;border-radius:50%;display:none;background:var(--teal)}
+.ni.active .ndot{display:block}
+.ni.ai-ni.active .ndot{background:var(--purple)}
+.ni.ls-ni.active .ndot{background:var(--green)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:var(--g9);color:#fff;padding:8px 16px;border-radius:18px;font-size:12px;font-weight:500;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;font-family:var(--f)}
+.toast.show{opacity:1}
+
+/* ── SYNC INDICATOR ── */
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;margin-left:5px;vertical-align:middle}
+.sync-dot.offline{background:#fbbf24}
+
+/* ── PRINT ── */
+@media print{
+  body{max-width:100%;padding:0;background:#fff}
+  .header,.tabs,.bnav,.toast,.overlay,.btn-add,.pdf-btn,.ls-gen,#auth-screen{display:none!important}
+  #print-area{display:block!important}
+  .pg,.pg-nopad{display:none!important}
+  @page{size:A4;margin:14mm}
+}
+#print-area{display:none}
+.pr{font-family:'Hind Siliguri',Inter,sans-serif;color:#111;font-size:11px;line-height:1.5}
+.pr-hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0d7c6e;padding-bottom:9px;margin-bottom:11px}
+.pr-logo{font-size:18px;font-weight:700;color:#0d7c6e}
+.pr-logo small{display:block;font-size:9.5px;font-weight:400;color:#555;margin-top:1px}
+.pr-pat{background:#f0f7f6;border-left:4px solid #0d7c6e;padding:9px 11px;border-radius:0 7px 7px 0;margin-bottom:11px;display:grid;grid-template-columns:1fr 1fr;gap:3px 14px}
+.pr-pname{font-size:14px;font-weight:700;color:#0a6659;grid-column:1/-1;margin-bottom:3px}
+.pr-kv{display:flex;gap:5px;font-size:10px}
+.pr-k{color:#555;min-width:58px}
+.pr-v{font-weight:600}
+.pr-sec{margin-bottom:11px}
+.pr-sh{font-size:11px;font-weight:700;background:#0d7c6e;color:#fff;padding:4px 9px;border-radius:5px;margin-bottom:5px}
+.pr-tbl{width:100%;border-collapse:collapse;font-size:10px}
+.pr-tbl th{background:#e6f4f2;color:#0a6659;font-weight:700;padding:4px 7px;text-align:left;border:1px solid #c7e8e4}
+.pr-tbl td{padding:4px 7px;border:1px solid #e5e7eb;vertical-align:top}
+.pr-tbl tr:nth-child(even) td{background:#fafafa}
+.pr-b{display:inline-block;padding:1px 6px;border-radius:9px;font-size:9px;font-weight:700}
+.pr-b.g{background:#dcfce7;color:#166534}.pr-b.a{background:#fef3c7;color:#92400e}.pr-b.r{background:#fee2e2;color:#991b1b}.pr-b.p{background:#f5f3ff;color:#6d28d9}
+.pr-emer{background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:7px 9px;margin-bottom:11px;font-size:10px}
+.pr-emer strong{color:#dc2626;display:block;margin-bottom:2px}
+.pr-foot{border-top:1px solid #ddd;padding-top:7px;margin-top:7px;display:flex;justify-content:space-between;font-size:9px;color:#888}
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH SCREEN ═══ -->
+<div id="auth-screen">
+  <div class="auth-logo">🏥</div>
+  <div class="auth-appname">Neyamot Health Record</div>
+  <div class="auth-tagline">Your Lifetime Health Records in One Place<br>আপনার সারাজীবনের স্বাস্থ্য রেকর্ড এক জায়গায়</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')" id="at-login">🔐 লগইন</div>
+      <div class="auth-tab" onclick="switchAuthTab('signup')" id="at-signup">✅ নতুন অ্যাকাউন্ট</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="auth-login">
+      <div style="margin-bottom:6px">
+        <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px">📱 মোবাইল নম্বর</label>
+        <div style="display:flex;gap:6px">
+          <div style="background:#f3f4f6;border:1.5px solid #d1d5db;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:600;color:#374151;white-space:nowrap">🇧🇩 +88</div>
+          <input class="auth-input" id="login-phone" type="tel" placeholder="01XXXXXXXXX" maxlength="11" style="margin-bottom:0;flex:1" oninput="this.value=this.value.replace(/\D/g,'')">
+        </div>
+      </div>
+      <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px;margin-top:12px">🔢 ৪ সংখ্যার PIN</label>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:4px" id="login-pin-boxes">
+        <input class="pin-box" type="tel" maxlength="1" oninput="pinMove(this,'login',0)" onkeydown="pinBack(event,this,'login',0)">
+        <input class="pin-box" type="tel" maxlength="1" oninput="pinMove(this,'login',1)" onkeydown="pinBack(event,this,'login',1)">
+        <input class="pin-box" type="tel" maxlength="1" oninput="pinMove(this,'login',2)" onkeydown="pinBack(event,this,'login',2)">
+        <input class="pin-box" type="tel" maxlength="1" oninput="pinMove(this,'login',3)" onkeydown="pinBack(event,this,'login',3)">
+      </div>
+      <button class="auth-btn" onclick="doLogin()" id="login-btn" style="margin-top:14px">🔐 লগইন করুন</button>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="auth-signup" style="display:none">
+      <div class="fgrp" style="margin-bottom:10px">
+        <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px">👤 আপনার পূর্ণ নাম</label>
+        <input class="auth-input" id="signup-name" type="text" placeholder="নাম লিখুন" style="margin-bottom:0">
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px">📱 মোবাইল নম্বর</label>
+        <div style="display:flex;gap:6px">
+          <div style="background:#f3f4f6;border:1.5px solid #d1d5db;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:600;color:#374151;white-space:nowrap">🇧🇩 +88</div>
+          <input class="auth-input" id="signup-phone" type="tel" placeholder="01XXXXXXXXX" maxlength="11" style="margin-bottom:0;flex:1" oninput="this.value=this.value.replace(/\D/g,'')">
+        </div>
+      </div>
+      <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px">🔢 ৪ সংখ্যার PIN বেছে নিন</label>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:4px" id="signup-pin-boxes">
+        <input class="pin-box" type="tel" maxlength="1" oninput="pinMove(this,'signup',0)" onkeydown="pinBack(event,this,'signup',0)">
+        <input class="pin-box" type="tel" maxlength="1" oninput="pinMove(this,'signup',1)" onkeydown="pinBack(event,this,'signup',1)">
+        <input class="pin-box" type="tel" maxlength="1" oninput="pinMove(this,'signup',2)" onkeydown="pinBack(event,this,'signup',2)">
+        <input class="pin-box" type="tel" maxlength="1" oninput="pinMove(this,'signup',3)" onkeydown="pinBack(event,this,'signup',3)">
+      </div>
+      <p style="font-size:11px;color:#6b7280;text-align:center;margin-top:6px">PIN মনে রাখুন — পরে লগইনে লাগবে</p>
+      <button class="auth-btn" onclick="doSignup()" id="signup-btn" style="margin-top:10px">✅ অ্যাকাউন্ট তৈরি করুন</button>
+    </div>
+
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-loading" id="auth-loading" style="display:none">⏳ অপেক্ষা করুন...</div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app" style="display:none">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo-wrap">
+      <div class="logo-icon">🏥</div>
+      <div>
+        <div class="app-name">Neyamot Health Record <span class="sync-dot" id="syncDot"></span></div>
+        <div class="app-sub" id="h-sub">আপনার চিকিৎসা ইতিহাস</div>
+      </div>
+    </div>
+    <div class="hdr-actions">
+      <div class="hdr-btn" onclick="toggleLang()">🌐 <span id="lang-lbl">EN</span></div>
+      <div class="hdr-btn" onclick="showPg('profile')">👤</div>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-ico">🔍</span>
+    <input type="text" id="searchInput" placeholder="ডাক্তার, ওষুধ বা রোগ খুঁজুন..." oninput="renderAll()">
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs" id="mainTabs">
+  <div class="tab active" onclick="switchTab('home')" id="tab-home"><span class="tab-ico">🏠</span><span id="tl-home"></span></div>
+  <div class="tab" onclick="switchTab('doctors')" id="tab-doctors"><span class="tab-ico">👨‍⚕️</span><span id="tl-doctors"></span></div>
+  <div class="tab" onclick="switchTab('medicines')" id="tab-medicines"><span class="tab-ico">💊</span><span id="tl-medicines"></span></div>
+  <div class="tab" onclick="switchTab('tests')" id="tab-tests"><span class="tab-ico">🧪</span><span id="tl-tests"></span></div>
+  <div class="tab" onclick="switchTab('diseases')" id="tab-diseases"><span class="tab-ico">🩺</span><span id="tl-diseases"></span></div>
+</div>
+
+<!-- HOME -->
+<div class="pg active" id="pg-home">
+  <div class="stats">
+    <div class="scard"><div class="sico" style="background:var(--teal-light)">👨‍⚕️</div><div><div class="snum" id="st-d">0</div><div class="slbl" id="sl-d"></div></div></div>
+    <div class="scard"><div class="sico" style="background:var(--amber-light)">💊</div><div><div class="snum" id="st-m">0</div><div class="slbl" id="sl-m"></div></div></div>
+    <div class="scard"><div class="sico" style="background:var(--purple-light)">🧪</div><div><div class="snum" id="st-t">0</div><div class="slbl" id="sl-t"></div></div></div>
+    <div class="scard"><div class="sico" style="background:var(--red-light)">🩺</div><div><div class="snum" id="st-dis">0</div><div class="slbl" id="sl-dis"></div></div></div>
+  </div>
+  <div class="alert"><div class="alert-ico">🚨</div><div><div class="alert-title" id="al-title"></div><div class="alert-body" id="al-body"></div></div></div>
+  <div class="sec-hdr"><div class="sec-title" id="sl-recent"></div></div>
+  <div id="recentList"></div>
+</div>
+
+<!-- DOCTORS -->
+<div class="pg" id="pg-doctors">
+  <div class="sec-hdr"><div class="sec-title" id="sl-doctorVisits"></div><button class="btn-add" onclick="openModal('doctor')">+ <span id="sl-add"></span></button></div>
+  <div id="doctorList"></div>
+</div>
+
+<!-- MEDICINES -->
+<div class="pg" id="pg-medicines">
+  <div class="sec-hdr"><div class="sec-title" id="sl-medicineList"></div><button class="btn-add" onclick="openModal('medicine')">+ <span id="sl-add2"></span></button></div>
+  <div id="medicineList"></div>
+</div>
+
+<!-- TESTS -->
+<div class="pg" id="pg-tests">
+  <div class="sec-hdr"><div class="sec-title" id="sl-testResults"></div><button class="btn-add" onclick="openModal('test')">+ <span id="sl-add3"></span></button></div>
+  <div id="testList"></div>
+</div>
+
+<!-- DISEASES -->
+<div class="pg" id="pg-diseases">
+  <div class="sec-hdr"><div class="sec-title" id="sl-diagnoses"></div><button class="btn-add" onclick="openModal('disease')">+ <span id="sl-add4"></span></button></div>
+  <div id="diseaseList"></div>
+</div>
+
+<!-- AI CHAT -->
+<div class="pg-nopad" id="pg-ai">
+  <div class="ai-hdr">
+    <div class="ai-ava">🤖</div>
+    <div><div style="font-size:14px;font-weight:700" id="sl-aiTitle"></div><div style="font-size:11px;opacity:.8" id="sl-aiSub"></div></div>
+  </div>
+  <div class="disc"><span style="font-size:15px">⚠️</span><span id="sl-disc"></span></div>
+  <div class="qbtns" id="qbtns"></div>
+  <div class="msgs" id="chatMsgs"></div>
+  <div class="chat-bar">
+    <textarea class="chat-inp" id="chatInp" rows="1" oninput="autoR(this)" onkeydown="chatKey(event)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<!-- LIFESTYLE -->
+<div class="pg-nopad" id="pg-lifestyle">
+  <div class="ls-hdr">
+    <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌿</div>
+    <div><div style="font-size:14px;font-weight:700" id="sl-lsTitle"></div><div style="font-size:11px;opacity:.8" id="sl-lsSub"></div></div>
+  </div>
+  <div style="padding:13px">
+    <button class="ls-gen" onclick="genLifestyle()">🌿 <span id="sl-lsGen"></span></button>
+    <div id="lsContent"><div style="text-align:center;padding:36px 16px;color:var(--g5)"><div style="font-size:42px;margin-bottom:10px">🌱</div><p style="font-size:12.5px" id="sl-lsEmpty"></p></div></div>
+    <button class="pdf-btn" onclick="genPDF()">📄 <span id="sl-pdfBtn"></span></button>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="pg" id="pg-profile">
+  <div class="prof-card">
+    <div class="ava">👤</div>
+    <div>
+      <div class="pname" id="pName">—</div>
+      <div class="pmeta" id="pMeta">—</div>
+      <span class="bbadge" id="pBlood">?</span>
+    </div>
+  </div>
+  <div class="ilist">
+    <div class="iitem"><div class="iico">📧</div><div><div class="ilbl" id="sl-email"></div><div class="ival" id="pi-email">—</div></div></div>
+    <div class="iitem"><div class="iico">📱</div><div><div class="ilbl" id="sl-phone"></div><div class="ival" id="pi-phone">—</div></div></div>
+    <div class="iitem"><div class="iico">🏠</div><div><div class="ilbl" id="sl-address"></div><div class="ival" id="pi-address">—</div></div></div>
+    <div class="iitem"><div class="iico">🚨</div><div><div class="ilbl" id="sl-emContact"></div><div class="ival" id="pi-em">—</div></div></div>
+    <div class="iitem"><div class="iico">⚠️</div><div><div class="ilbl" id="sl-allergy"></div><div class="ival" id="pi-allergy">—</div></div></div>
+  </div>
+  <button class="btn-add" style="width:100%;justify-content:center;padding:12px;border-radius:11px;font-size:13px" onclick="openModal('profile')">✏️ <span id="sl-editProf"></span></button>
+  <button class="logout-btn" onclick="doLogout()">🚪 <span id="sl-logout"></span></button>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+<!-- DOCTOR -->
+<div class="overlay" id="mo-doctor">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">👨‍⚕️ <span id="ml-addDoc"></span></div>
+    <div class="fgrp"><label id="ml-dname"></label><input id="d-name" type="text"></div>
+    <div class="fgrp"><label id="ml-dspec"></label><input id="d-spec" type="text"></div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-dhosp"></label><input id="d-hosp" type="text"></div>
+      <div class="fgrp"><label id="ml-ddate"></label><input id="d-date" type="date"></div>
+    </div>
+    <div class="fgrp"><label id="ml-dnotes"></label><textarea id="d-notes"></textarea></div>
+    <div class="fgrp"><label id="ml-dfollow"></label><input id="d-follow" type="date"></div>
+    <button class="mbtn primary" onclick="saveDoc()">💾 <span id="ml-save"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('doctor')"><span id="ml-cancel"></span></button>
+  </div>
+</div>
+
+<!-- MEDICINE -->
+<div class="overlay" id="mo-medicine">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">💊 <span id="ml-addMed"></span></div>
+    <div class="fgrp"><label id="ml-mname"></label><input id="m-name" type="text"></div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-mdose"></label><input id="m-dose" type="text"></div>
+      <div class="fgrp"><label id="ml-msched"></label>
+        <select id="m-sched">
+          <option value="">—</option>
+          <option id="mo-once"></option><option id="mo-twice"></option><option id="mo-thrice"></option>
+          <option id="mo-before"></option><option id="mo-after"></option><option id="mo-bed"></option><option id="mo-needed"></option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-mstart"></label><input id="m-start" type="date"></div>
+      <div class="fgrp"><label id="ml-mend"></label><input id="m-end" type="date"></div>
+    </div>
+    <div class="fgrp"><label id="ml-mfor"></label><input id="m-for" type="text"></div>
+    <div class="fgrp"><label id="ml-mstatus"></label>
+      <select id="m-status">
+        <option value="active" id="mo-active"></option>
+        <option value="stopped" id="mo-stopped"></option>
+        <option value="completed" id="mo-completed"></option>
+      </select>
+    </div>
+    <button class="mbtn primary" onclick="saveMed()">💾 <span id="ml-save2"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('medicine')"><span id="ml-cancel2"></span></button>
+  </div>
+</div>
+
+<!-- TEST -->
+<div class="overlay" id="mo-test">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">🧪 <span id="ml-addTest"></span></div>
+    <div class="fgrp"><label id="ml-tname"></label><input id="t-name" type="text"></div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-tdate"></label><input id="t-date" type="date"></div>
+      <div class="fgrp"><label id="ml-tlab"></label><input id="t-lab" type="text"></div>
+    </div>
+    <div class="fgrp"><label id="ml-tres"></label><textarea id="t-result"></textarea></div>
+    <div class="fgrp"><label id="ml-tnorm"></label><input id="t-normal" type="text"></div>
+    <div class="fgrp"><label id="ml-tstatus"></label>
+      <select id="t-status">
+        <option value="normal" id="mo-normal"></option>
+        <option value="abnormal" id="mo-abnormal"></option>
+        <option value="pending" id="mo-pending"></option>
+      </select>
+    </div>
+    <div class="fgrp"><label id="ml-tnotes"></label><textarea id="t-notes"></textarea></div>
+    <button class="mbtn primary" onclick="saveTest()">💾 <span id="ml-save3"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('test')"><span id="ml-cancel3"></span></button>
+  </div>
+</div>
+
+<!-- DISEASE -->
+<div class="overlay" id="mo-disease">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">🩺 <span id="ml-addDis"></span></div>
+    <div class="fgrp"><label id="ml-disname"></label><input id="dis-name" type="text"></div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-disdate"></label><input id="dis-date" type="date"></div>
+      <div class="fgrp"><label id="ml-disstatus"></label>
+        <select id="dis-status">
+          <option value="active" id="mo-ongoing"></option>
+          <option value="cured" id="mo-cured"></option>
+          <option value="chronic" id="mo-chronic"></option>
+        </select>
+      </div>
+    </div>
+    <div class="fgrp"><label id="ml-disnotes"></label><textarea id="dis-notes"></textarea></div>
+    <div class="fgrp"><label id="ml-disdoc"></label><input id="dis-doc" type="text"></div>
+    <button class="mbtn primary" onclick="saveDis()">💾 <span id="ml-save4"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('disease')"><span id="ml-cancel4"></span></button>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="overlay" id="mo-profile">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">✏️ <span id="ml-editProf"></span></div>
+    <div class="fgrp"><label id="ml-fullname"></label><input id="p-name" type="text"></div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-age"></label><input id="p-age" type="number"></div>
+      <div class="fgrp"><label id="ml-gender"></label>
+        <select id="p-gender"><option value="">—</option><option value="male" id="mo-male"></option><option value="female" id="mo-female"></option><option value="other" id="mo-other"></option></select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-blood"></label>
+        <select id="p-blood"><option value="">?</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+      </div>
+      <div class="fgrp"><label id="ml-phone"></label><input id="p-phone" type="tel"></div>
+    </div>
+    <div class="fgrp"><label id="ml-addr"></label><input id="p-addr" type="text"></div>
+    <div class="fgrp"><label id="ml-emCon"></label><input id="p-em" type="text"></div>
+    <div class="fgrp"><label id="ml-allergy"></label><input id="p-allergy" type="text"></div>
+    <button class="mbtn primary" onclick="saveProfile()">💾 <span id="ml-save5"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('profile')"><span id="ml-cancel5"></span></button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="mo-detail">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div id="detailContent"></div>
+    <button class="mbtn cancel" onclick="closeModal('detail')" id="ml-close"></button>
+    <button class="mbtn danger" onclick="delRecord()" id="ml-delete"></button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<div id="print-area"></div>
+<div class="toast" id="toast"></div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav" id="bnav" style="display:none">
+  <div class="ni active" onclick="showPg('home')" id="ni-home"><span class="ni-ico">🏠</span><span class="ni-lbl" id="nl-home"></span><div class="ndot"></div></div>
+  <div class="ni" onclick="showPg('doctors')" id="ni-doctors"><span class="ni-ico">👨‍⚕️</span><span class="ni-lbl" id="nl-doc"></span><div class="ndot"></div></div>
+  <div class="ni" onclick="showPg('medicines')" id="ni-medicines"><span class="ni-ico">💊</span><span class="ni-lbl" id="nl-med"></span><div class="ndot"></div></div>
+  <div class="ni ai-ni" onclick="showPg('ai')" id="ni-ai"><span class="ni-ico">🤖</span><span class="ni-lbl" id="nl-ai"></span><div class="ndot"></div></div>
+  <div class="ni ls-ni" onclick="showPg('lifestyle')" id="ni-lifestyle"><span class="ni-ico">🌿</span><span class="ni-lbl" id="nl-ls"></span><div class="ndot"></div></div>
+</div>
+
+<script>
+// ══════════════════════════════
+//  SUPABASE INIT
+// ══════════════════════════════
+const SUPA_URL = 'https://omahovwvsagcjqlxggji.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tYWhvdnd2c2FnY2pxbHhnZ2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDQ2NDcsImV4cCI6MjA5Nzk4MDY0N30.zxzYrhYAWQHsJtIjI2vgX3OT-hlV_hLINmZRlQVvQs0';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ══════════════════════════════
+//  I18N
+// ══════════════════════════════
+const T = {
+  bn:{
+    home:'হোম', doctor:'ডাক্তার', medicine:'ওষুধ', test:'পরীক্ষা', aiNav:'AI', lsNav:'জীবন',
+    appSub:'আপনার চিকিৎসা ইতিহাস',
+    visits:'ডাক্তার ভিজিট', activeMeds:'সক্রিয় ওষুধ', tests:'পরীক্ষা', diagnoses:'রোগ নির্ণয়',
+    emergency:'জরুরি তথ্য', recent:'সাম্প্রতিক কার্যক্রম',
+    doctorVisits:'ডাক্তার ভিজিট', medicineList:'ওষুধের তালিকা', testResults:'পরীক্ষার ফলাফল',
+    add:'যোগ করুন', save:'সংরক্ষণ', cancel:'বাতিল', close:'বন্ধ', delete:'মুছুন',
+    editProf:'প্রোফাইল সম্পাদনা', email:'ইমেইল', phone:'মোবাইল', address:'ঠিকানা',
+    emContact:'জরুরি যোগাযোগ', allergy:'অ্যালার্জি', logout:'লগআউট',
+    addDoc:'ডাক্তার ভিজিট যোগ করুন', dName:'ডাক্তারের নাম *', dSpec:'বিশেষজ্ঞতা', dHosp:'হাসপাতাল', dDate:'তারিখ', dNotes:'ডাক্তারের মতামত', dFollow:'ফলো-আপ তারিখ',
+    addMed:'ওষুধ যোগ করুন', mName:'ওষুধের নাম *', mDose:'ডোজ', mSched:'সময়সূচী', mStart:'শুরু', mEnd:'শেষ', mFor:'কোন রোগের জন্য', mStatus:'অবস্থা',
+    addTest:'পরীক্ষা যোগ করুন', tName:'পরীক্ষার নাম *', tDate:'তারিখ', tLab:'ল্যাব', tRes:'ফলাফল', tNorm:'স্বাভাবিক মান', tStatus:'অবস্থা', tNotes:'মন্তব্য',
+    addDis:'রোগ নির্ণয় যোগ করুন', disName:'রোগের নাম *', disDate:'তারিখ', disStatus:'অবস্থা', disNotes:'বিবরণ', disDoc:'চিকিৎসক',
+    fullname:'পূর্ণ নাম', age:'বয়স', gender:'লিঙ্গ', blood:'রক্তের গ্রুপ',
+    male:'পুরুষ', female:'মহিলা', other:'অন্যান্য',
+    once:'দিনে ১ বার', twice:'দিনে ২ বার', thrice:'দিনে ৩ বার', before:'খাওয়ার আগে', after:'খাওয়ার পরে', bed:'ঘুমানোর আগে', needed:'প্রয়োজনমতো',
+    active:'সক্রিয়', stopped:'বন্ধ', completed:'সম্পন্ন',
+    normal:'স্বাভাবিক ✅', abnormal:'অস্বাভাবিক ⚠️', pending:'অপেক্ষমাণ ⏳',
+    ongoing:'চলমান', cured:'সুস্থ ✅', chronic:'দীর্ঘস্থায়ী',
+    aiTitle:'AI স্বাস্থ্য সহায়ক', aiSub:'Claude AI দ্বারা পরিচালিত',
+    disc:'এটি শুধু তথ্যমূলক। গুরুতর অসুস্থতায় ডাক্তার দেখান।',
+    aiWelcome:'আমি Neyamot Health Record\'র AI সহায়ক। আপনার স্বাস্থ্য রেকর্ড দেখে সাহায্য করতে পারি। কী জানতে চান?',
+    thinking:'বিশ্লেষণ করছি...',
+    q1:'আমার ওষুধগুলো কী?', q2:'পরীক্ষার ফলাফল বিশ্লেষণ করো', q3:'আমার রোগ সম্পর্কে বলো', q4:'কোন ডাক্তার দেখাবো?',
+    chatPh:'লক্ষণ বা প্রশ্ন লিখুন...',
+    lsTitle:'স্বাস্থ্যকর জীবনযাপন', lsSub:'AI-ভিত্তিক ব্যক্তিগত পরামর্শ',
+    lsGen:'আমার স্বাস্থ্য বিশ্লেষণ করুন', lsEmpty:'উপরের বোতামে চাপ দিন। AI আপনার রেকর্ড দেখে পরামর্শ দেবে।',
+    lsAnalyzing:'স্বাস্থ্য রেকর্ড বিশ্লেষণ করছি...', lsScore:'স্বাস্থ্য স্কোর',
+    pdfBtn:'PDF রিপোর্ট ডাউনলোড করুন (A4)',
+    noRec:'কোনো রেকর্ড নেই', addNew:'নতুন যোগ করুন',
+    saved:'সংরক্ষিত হয়েছে ✅', deleted:'মুছে ফেলা হয়েছে 🗑️', profUpdated:'প্রোফাইল আপডেট হয়েছে ✅',
+    nameReq:'নাম লিখুন', loggedOut:'লগআউট সম্পন্ন', connErr:'সংযোগ সমস্যা। আবার চেষ্টা করুন।',
+    emFill:'প্রোফাইলে রক্তের গ্রুপ ও জরুরি যোগাযোগ যোগ করুন।',
+    visitDone:'ভিজিট সম্পন্ন', docLbl:'ডাক্তার ভিজিট', medLbl:'ওষুধ', testLbl:'পরীক্ষা', disLbl:'রোগ নির্ণয়',
+    searchPh:'ডাক্তার, ওষুধ বা রোগ খুঁজুন...',
+    syncing:'ক্লাউডে সংযুক্ত',
+  },
+  en:{
+    home:'Home', doctor:'Doctor', medicine:'Med', test:'Tests', aiNav:'AI', lsNav:'Lifestyle',
+    appSub:'Your medical history',
+    visits:'Doctor Visits', activeMeds:'Active Meds', tests:'Tests', diagnoses:'Diagnoses',
+    emergency:'Emergency Info', recent:'Recent Activity',
+    doctorVisits:'Doctor Visits', medicineList:'Medicines', testResults:'Test Results',
+    add:'Add', save:'Save', cancel:'Cancel', close:'Close', delete:'Delete',
+    editProf:'Edit Profile', email:'Email', phone:'Phone', address:'Address',
+    emContact:'Emergency Contact', allergy:'Allergy', logout:'Log Out',
+    addDoc:'Add Doctor Visit', dName:'Doctor Name *', dSpec:'Specialty', dHosp:'Hospital', dDate:'Date', dNotes:'Doctor Notes', dFollow:'Follow-up Date',
+    addMed:'Add Medicine', mName:'Medicine Name *', mDose:'Dose', mSched:'Schedule', mStart:'Start', mEnd:'End', mFor:'For Disease', mStatus:'Status',
+    addTest:'Add Test', tName:'Test Name *', tDate:'Date', tLab:'Lab', tRes:'Result', tNorm:'Normal Range', tStatus:'Status', tNotes:'Notes',
+    addDis:'Add Diagnosis', disName:'Disease Name *', disDate:'Date', disStatus:'Status', disNotes:'Description', disDoc:'Doctor',
+    fullname:'Full Name', age:'Age', gender:'Gender', blood:'Blood Group',
+    male:'Male', female:'Female', other:'Other',
+    once:'Once daily', twice:'Twice daily', thrice:'Three times daily', before:'Before meals', after:'After meals', bed:'At bedtime', needed:'As needed',
+    active:'Active', stopped:'Stopped', completed:'Completed',
+    normal:'Normal ✅', abnormal:'Abnormal ⚠️', pending:'Pending ⏳',
+    ongoing:'Ongoing', cured:'Cured ✅', chronic:'Chronic',
+    aiTitle:'AI Health Assistant', aiSub:'Powered by Claude AI',
+    disc:'This is informational only. See a doctor for serious concerns.',
+    aiWelcome:"I'm Neyamot Health Record's AI assistant. I can review your health records and help you. What would you like to know?",
+    thinking:'Analyzing...', 
+    q1:'What are my medicines?', q2:'Analyze my test results', q3:'Tell me about my conditions', q4:'Which doctor should I see?',
+    chatPh:'Type symptoms or a question...',
+    lsTitle:'Healthy Lifestyle', lsSub:'AI-personalized advice',
+    lsGen:'Analyze My Health', lsEmpty:'Tap the button above. AI will review your records and give personalized advice.',
+    lsAnalyzing:'Analyzing your health records...', lsScore:'Health Score',
+    pdfBtn:'Download PDF Report (A4)',
+    noRec:'No records', addNew:'Add new',
+    saved:'Saved ✅', deleted:'Deleted 🗑️', profUpdated:'Profile updated ✅',
+    nameReq:'Enter a name', loggedOut:'Logged out', connErr:'Connection error. Try again.',
+    emFill:'Add blood group & emergency contact in Profile.',
+    visitDone:'Visit complete', docLbl:'Doctor Visit', medLbl:'Medicine', testLbl:'Test', disLbl:'Diagnosis',
+    searchPh:'Search doctors, medicines, diseases...',
+    syncing:'Connected to cloud',
+  }
+};
+
+let lang = localStorage.getItem('ra_lang') || 'bn';
+let currentUser = null;
+let db = {doctors:[], medicines:[], tests:[], diseases:[], profile:{}};
+let chatHistory = [];
+let delTarget = null;
+
+function t(k){ return T[lang][k] || k; }
+
+// ══════════════════════════════
+//  AUTH
+// ══════════════════════════════
+function switchAuthTab(tab) {
+  document.getElementById('auth-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('auth-signup').style.display = tab==='signup'?'block':'none';
+  document.getElementById('at-login').className = 'auth-tab'+(tab==='login'?' active':'');
+  document.getElementById('at-signup').className = 'auth-tab'+(tab==='signup'?' active':'');
+  document.getElementById('auth-err').className = 'auth-err';
+}
+
+function setAuthLoading(v) {
+  document.getElementById('auth-loading').style.display = v?'block':'none';
+  ['login-btn','signup-btn'].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=v; });
+}
+
+function showAuthErr(msg, success=false) {
+  const el = document.getElementById('auth-err');
+  el.textContent = msg; el.className = 'auth-err show';
+  el.style.background = success ? '#dcfce7' : '#fee2e2';
+  el.style.color = success ? '#166534' : '#991b1b';
+}
+
+// PIN box helpers
+function pinMove(el, form, idx) {
+  el.value = el.value.replace(/\D/g,'');
+  if (el.value.length === 1 && idx < 3) {
+    const boxes = document.querySelectorAll(`#${form}-pin-boxes .pin-box`);
+    boxes[idx+1].focus();
+  }
+}
+function pinBack(e, el, form, idx) {
+  if (e.key === 'Backspace' && !el.value && idx > 0) {
+    const boxes = document.querySelectorAll(`#${form}-pin-boxes .pin-box`);
+    boxes[idx-1].focus();
+  }
+}
+function getPin(form) {
+  return Array.from(document.querySelectorAll(`#${form}-pin-boxes .pin-box`)).map(b=>b.value).join('');
+}
+function clearPin(form) {
+  document.querySelectorAll(`#${form}-pin-boxes .pin-box`).forEach(b=>b.value='');
+}
+
+// মোবাইল নম্বরকে fake email বানাই
+function phoneToEmail(phone) {
+  const clean = phone.replace(/\D/g,'');
+  return `${clean}@neyamot.health`;
+}
+
+async function doLogin() {
+  const phone = document.getElementById('login-phone').value.trim();
+  const pin = getPin('login');
+  if (!phone || phone.length < 11) { showAuthErr('সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা)'); return; }
+  if (pin.length !== 4) { showAuthErr('৪ সংখ্যার PIN দিন'); return; }
+  setAuthLoading(true);
+  // PIN কে password হিসেবে ব্যবহার করি (PIN + secret salt)
+  const password = pin + '_nhr_' + phone.slice(-4);
+  const email = phoneToEmail(phone);
+  const {error} = await supa.auth.signInWithPassword({email, password});
+  setAuthLoading(false);
+  if (error) {
+    showAuthErr('মোবাইল নম্বর বা PIN ভুল হয়েছে');
+    clearPin('login');
+  }
+}
+
+async function doSignup() {
+  const name = document.getElementById('signup-name').value.trim();
+  const phone = document.getElementById('signup-phone').value.trim();
+  const pin = getPin('signup');
+  if (!name) { showAuthErr('আপনার নাম লিখুন'); return; }
+  if (!phone || phone.length < 11) { showAuthErr('সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা)'); return; }
+  if (!phone.startsWith('01')) { showAuthErr('মোবাইল নম্বর 01 দিয়ে শুরু হতে হবে'); return; }
+  if (pin.length !== 4) { showAuthErr('৪ সংখ্যার PIN দিন'); return; }
+  setAuthLoading(true);
+  const password = pin + '_nhr_' + phone.slice(-4);
+  const email = phoneToEmail(phone);
+  const {data, error} = await supa.auth.signUp({email, password, options:{data:{full_name:name, phone}}});
+  setAuthLoading(false);
+  if (error) {
+    if (error.message.includes('already registered')) {
+      showAuthErr('এই মোবাইল নম্বরে আগেই অ্যাকাউন্ট আছে। লগইন করুন।');
+    } else {
+      showAuthErr('সমস্যা হয়েছে: ' + error.message);
+    }
+    return;
+  }
+  // Auto login after signup
+  const {error: loginErr} = await supa.auth.signInWithPassword({email, password});
+  if (loginErr) {
+    showAuthErr('✅ অ্যাকাউন্ট তৈরি হয়েছে! এখন লগইন করুন।', true);
+    switchAuthTab('login');
+    document.getElementById('login-phone').value = phone;
+  }
+}
+
+async function doLogout() {
+  await supa.auth.signOut();
+  currentUser = null; db = {doctors:[],medicines:[],tests:[],diseases:[],profile:{}};
+  chatHistory = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('bnav').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  clearPin('login'); clearPin('signup');
+  showToast(t('loggedOut'));
+}
+
+// Auth state listener
+supa.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    currentUser = session.user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('bnav').style.display = 'flex';
+    await loadAllData();
+    applyLang();
+  }
+});
+
+// ══════════════════════════════
+//  SUPABASE DATA
+// ══════════════════════════════
+async function loadAllData() {
+  if (!currentUser) return;
+  const uid = currentUser.id;
+  document.getElementById('syncDot').className = 'sync-dot offline';
+  try {
+    const [d,m,t,dis,p] = await Promise.all([
+      supa.from('doctors').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+      supa.from('medicines').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+      supa.from('tests').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+      supa.from('diseases').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+      supa.from('profiles').select('*').eq('user_id',uid).single()
+    ]);
+    db.doctors = d.data||[]; db.medicines = m.data||[]; db.tests = t.data||[]; db.diseases = dis.data||[];
+    db.profile = p.data||{};
+    // মোবাইল নম্বর email থেকে বের করি
+    const emailPhone = currentUser.email?.replace('@neyamot.health','') || '';
+    db.profile.phone = db.profile.phone || emailPhone;
+    db.profile.name = db.profile.name || currentUser.user_metadata?.full_name || '';
+    document.getElementById('syncDot').className = 'sync-dot';
+  } catch(e) { document.getElementById('syncDot').className = 'sync-dot offline'; }
+  renderAll();
+}
+
+async function sbInsert(table, obj) {
+  const {data,error} = await supa.from(table).insert({...obj, user_id:currentUser.id}).select().single();
+  if (error) throw error;
+  return data;
+}
+async function sbDelete(table, id) {
+  const {error} = await supa.from(table).delete().eq('id',id).eq('user_id',currentUser.id);
+  if (error) throw error;
+}
+async function sbUpsertProfile(obj) {
+  const {error} = await supa.from('profiles').upsert({...obj, user_id:currentUser.id},{onConflict:'user_id'});
+  if (error) throw error;
+}
+
+// ══════════════════════════════
+//  I18N APPLY
+// ══════════════════════════════
+function applyLang() {
+  document.getElementById('lang-lbl').textContent = lang==='bn'?'EN':'বাংলা';
+  document.getElementById('h-sub').textContent = t('appSub');
+  document.getElementById('searchInput').placeholder = t('searchPh');
+  document.getElementById('chatInp').placeholder = t('chatPh');
+
+  const map = {
+    'tl-home':'home','tl-doctors':'doctor','tl-medicines':'medicine','tl-tests':'test','tl-diseases':'diagnoses',
+    'sl-d':'visits','sl-m':'activeMeds','sl-t':'tests','sl-dis':'diagnoses',
+    'al-title':'emergency','sl-recent':'recent',
+    'sl-doctorVisits':'doctorVisits','sl-medicineList':'medicineList','sl-testResults':'testResults','sl-diagnoses':'diagnoses',
+    'sl-add':'add','sl-add2':'add','sl-add3':'add','sl-add4':'add',
+    'sl-aiTitle':'aiTitle','sl-aiSub':'aiSub','sl-disc':'disc',
+    'sl-lsTitle':'lsTitle','sl-lsSub':'lsSub','sl-lsGen':'lsGen','sl-lsEmpty':'lsEmpty','sl-pdfBtn':'pdfBtn',
+    'sl-email':'email','sl-phone':'phone','sl-address':'address','sl-emContact':'emContact','sl-allergy':'allergy','sl-editProf':'editProf','sl-logout':'logout',
+    'nl-home':'home','nl-doc':'doctor','nl-med':'medicine','nl-ai':'aiNav','nl-ls':'lsNav',
+    'ml-addDoc':'addDoc','ml-dname':'dName','ml-dspec':'dSpec','ml-dhosp':'dHosp','ml-ddate':'dDate','ml-dnotes':'dNotes','ml-dfollow':'dFollow',
+    'ml-addMed':'addMed','ml-mname':'mName','ml-mdose':'mDose','ml-msched':'mSched','ml-mstart':'mStart','ml-mend':'mEnd','ml-mfor':'mFor','ml-mstatus':'mStatus',
+    'ml-addTest':'addTest','ml-tname':'tName','ml-tdate':'tDate','ml-tlab':'tLab','ml-tres':'tRes','ml-tnorm':'tNorm','ml-tstatus':'tStatus','ml-tnotes':'tNotes',
+    'ml-addDis':'addDis','ml-disname':'disName','ml-disdate':'disDate','ml-disstatus':'disStatus','ml-disnotes':'disNotes','ml-disdoc':'disDoc',
+    'ml-editProf':'editProf','ml-fullname':'fullname','ml-age':'age','ml-gender':'gender','ml-blood':'blood','ml-phone':'phone','ml-addr':'address','ml-emCon':'emContact','ml-allergy':'allergy',
+    'ml-save':'save','ml-cancel':'cancel','ml-save2':'save','ml-cancel2':'cancel','ml-save3':'save','ml-cancel3':'cancel','ml-save4':'save','ml-cancel4':'cancel','ml-save5':'save','ml-cancel5':'cancel',
+    'ml-close':'close','ml-delete':'delete',
+  };
+  Object.entries(map).forEach(([id,key])=>{ const el=document.getElementById(id); if(el) el.textContent=t(key); });
+
+  // select options
+  const optMap = {
+    'mo-once':'once','mo-twice':'twice','mo-thrice':'thrice','mo-before':'before','mo-after':'after','mo-bed':'bed','mo-needed':'needed',
+    'mo-active':'active','mo-stopped':'stopped','mo-completed':'completed',
+    'mo-normal':'normal','mo-abnormal':'abnormal','mo-pending':'pending',
+    'mo-ongoing':'ongoing','mo-cured':'cured','mo-chronic':'chronic',
+    'mo-male':'male','mo-female':'female','mo-other':'other',
+  };
+  const schedVals = ['once','twice','thrice','before','after','bed','needed'];
+  Object.entries(optMap).forEach(([id,key])=>{ const el=document.getElementById(id); if(el){ el.textContent=t(key); if(schedVals.includes(key)) el.value=t(key); } });
+
+  buildQBtns();
+  renderAll();
+  localStorage.setItem('ra_lang', lang);
+}
+
+function toggleLang(){ lang=lang==='bn'?'en':'bn'; applyLang(); }
+
+// ══════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════
+function showPg(pg) {
+  document.querySelectorAll('.pg,.pg-nopad').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const pgEl = document.getElementById('pg-'+pg);
+  if(pgEl) pgEl.classList.add('active');
+  const niEl = document.getElementById('ni-'+pg);
+  if(niEl) niEl.classList.add('active');
+  const hideTabs = ['ai','lifestyle','profile'];
+  document.getElementById('mainTabs').style.display = hideTabs.includes(pg)?'none':'flex';
+  if(!hideTabs.includes(pg)){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    const tabEl=document.getElementById('tab-'+pg); if(tabEl) tabEl.classList.add('active');
+  }
+  if(pg==='ai' && chatHistory.length===0) addMsg(t('aiWelcome'),'ai');
+  renderAll();
+}
+function switchTab(tab){ showPg(tab); }
+
+// ══════════════════════════════
+//  MODALS
+// ══════════════════════════════
+function openModal(type) {
+  if(type==='profile'){
+    const p=db.profile;
+    ['name','age','gender','blood','phone'].forEach(k=>{const el=document.getElementById('p-'+k);if(el) el.value=p[k]||'';});
+    document.getElementById('p-addr').value = p.address||'';
+    document.getElementById('p-em').value = p.emergency||'';
+    document.getElementById('p-allergy').value = p.allergy||'';
+  }
+  document.getElementById('mo-'+type).classList.add('open');
+}
+function closeModal(type){ document.getElementById('mo-'+type).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o=>{ o.addEventListener('click',function(e){if(e.target===this) this.classList.remove('open');}); });
+
+// ══════════════════════════════
+//  TOAST
+// ══════════════════════════════
+function showToast(msg){ const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500); }
+
+// ══════════════════════════════
+//  SAVE FUNCTIONS
+// ══════════════════════════════
+async function saveDoc() {
+  const name = document.getElementById('d-name').value.trim();
+  if(!name){ showToast('⚠️ '+t('nameReq')); return; }
+  try {
+    const rec = await sbInsert('doctors',{name, specialty:document.getElementById('d-spec').value, hospital:document.getElementById('d-hosp').value, date:document.getElementById('d-date').value, notes:document.getElementById('d-notes').value, followup:document.getElementById('d-follow').value});
+    db.doctors.unshift(rec); closeModal('doctor'); renderAll(); showToast(t('saved'));
+    ['d-name','d-spec','d-hosp','d-notes'].forEach(id=>document.getElementById(id).value='');
+  } catch(e){ showToast('⚠️ '+t('connErr')); }
+}
+
+async function saveMed() {
+  const name = document.getElementById('m-name').value.trim();
+  if(!name){ showToast('⚠️ '+t('nameReq')); return; }
+  try {
+    const rec = await sbInsert('medicines',{name, dose:document.getElementById('m-dose').value, schedule:document.getElementById('m-sched').value, start_date:document.getElementById('m-start').value, end_date:document.getElementById('m-end').value, for_disease:document.getElementById('m-for').value, status:document.getElementById('m-status').value});
+    db.medicines.unshift(rec); closeModal('medicine'); renderAll(); showToast(t('saved'));
+  } catch(e){ showToast('⚠️ '+t('connErr')); }
+}
+
+async function saveTest() {
+  const name = document.getElementById('t-name').value.trim();
+  if(!name){ showToast('⚠️ '+t('nameReq')); return; }
+  try {
+    const rec = await sbInsert('tests',{name, date:document.getElementById('t-date').value, lab:document.getElementById('t-lab').value, result:document.getElementById('t-result').value, normal_range:document.getElementById('t-normal').value, status:document.getElementById('t-status').value, notes:document.getElementById('t-notes').value});
+    db.tests.unshift(rec); closeModal('test'); renderAll(); showToast(t('saved'));
+  } catch(e){ showToast('⚠️ '+t('connErr')); }
+}
+
+async function saveDis() {
+  const name = document.getElementById('dis-name').value.trim();
+  if(!name){ showToast('⚠️ '+t('nameReq')); return; }
+  try {
+    const rec = await sbInsert('diseases',{name, date:document.getElementById('dis-date').value, status:document.getElementById('dis-status').value, notes:document.getElementById('dis-notes').value, doctor:document.getElementById('dis-doc').value});
+    db.diseases.unshift(rec); closeModal('disease'); renderAll(); showToast(t('saved'));
+  } catch(e){ showToast('⚠️ '+t('connErr')); }
+}
+
+async function saveProfile() {
+  const obj = {name:document.getElementById('p-name').value, age:document.getElementById('p-age').value, gender:document.getElementById('p-gender').value, blood:document.getElementById('p-blood').value, phone:document.getElementById('p-phone').value, address:document.getElementById('p-addr').value, emergency:document.getElementById('p-em').value, allergy:document.getElementById('p-allergy').value};
+  try {
+    await sbUpsertProfile(obj);
+    db.profile = {...obj, email:currentUser.email};
+    closeModal('profile'); renderProfile(); showToast(t('profUpdated'));
+  } catch(e){ showToast('⚠️ '+t('connErr')); }
+}
+
+// ══════════════════════════════
+//  RENDER
+// ══════════════════════════════
+function fd(d){ if(!d) return ''; try{ return new Date(d).toLocaleDateString(lang==='bn'?'bn-BD':'en-GB',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return d; } }
+function gq(){ return document.getElementById('searchInput').value.toLowerCase(); }
+
+function renderAll(){ renderStats();renderDoctors();renderMedicines();renderTests();renderDiseases();renderProfile();renderRecent(); }
+
+function renderStats(){
+  document.getElementById('st-d').textContent=db.doctors.length;
+  document.getElementById('st-m').textContent=db.medicines.filter(m=>m.status==='active').length;
+  document.getElementById('st-t').textContent=db.tests.length;
+  document.getElementById('st-dis').textContent=db.diseases.length;
+}
+
+function emptyEl(ico){ return `<div class="empty"><div class="empty-ico">${ico}</div><p>${t('noRec')}<br>${t('addNew')}</p></div>`; }
+
+function renderDoctors(){
+  const q=gq(), el=document.getElementById('doctorList');
+  const items=db.doctors.filter(d=>!q||d.name?.toLowerCase().includes(q)||(d.specialty||'').toLowerCase().includes(q)||(d.hospital||'').toLowerCase().includes(q));
+  if(!items.length){el.innerHTML=emptyEl('👨‍⚕️');return;}
+  el.innerHTML=items.map(d=>`<div class="card doc" onclick="showDetail('doctor','${d.id}')">
+    <div class="card-top"><div><div class="card-title">👨‍⚕️ ${d.name}</div><div class="card-sub">${d.specialty||'—'}</div></div><div class="card-date">${fd(d.date)}</div></div>
+    ${d.hospital?`<div class="card-body">🏥 ${d.hospital}</div>`:''}
+    ${d.notes?`<div class="card-body">${d.notes.substring(0,75)}${d.notes.length>75?'...':''}</div>`:''}
+    <div class="tags">${d.followup?`<span class="tag a">📅 ${fd(d.followup)}</span>`:''}<span class="tag g">${t('visitDone')}</span></div>
+  </div>`).join('');
+}
+
+function renderMedicines(){
+  const q=gq(), el=document.getElementById('medicineList');
+  const items=db.medicines.filter(m=>!q||m.name?.toLowerCase().includes(q)||(m.for_disease||'').toLowerCase().includes(q));
+  if(!items.length){el.innerHTML=emptyEl('💊');return;}
+  const sc={active:'g',stopped:'r',completed:'p'};
+  el.innerHTML=items.map(m=>`<div class="card med" onclick="showDetail('medicine','${m.id}')">
+    <div class="card-top"><div><div class="card-title">💊 ${m.name}</div><div class="card-sub">${m.dose||''} ${m.schedule?'· '+m.schedule:''}</div></div><div class="card-date">${fd(m.start_date)}</div></div>
+    ${m.for_disease?`<div class="card-body">🩺 ${m.for_disease}</div>`:''}
+    <div class="tags"><span class="tag ${sc[m.status]||'g'}">${t(m.status)||m.status}</span>${m.end_date?`<span class="tag a">${fd(m.end_date)}</span>`:''}</div>
+  </div>`).join('');
+}
+
+function renderTests(){
+  const q=gq(), el=document.getElementById('testList');
+  const items=db.tests.filter(tt=>!q||tt.name?.toLowerCase().includes(q)||(tt.lab||'').toLowerCase().includes(q));
+  if(!items.length){el.innerHTML=emptyEl('🧪');return;}
+  const sc={normal:'g',abnormal:'r',pending:'a'};
+  el.innerHTML=items.map(tt=>`<div class="card tst" onclick="showDetail('test','${tt.id}')">
+    <div class="card-top"><div><div class="card-title">🧪 ${tt.name}</div><div class="card-sub">${tt.lab||'—'}</div></div><div class="card-date">${fd(tt.date)}</div></div>
+    ${tt.result?`<div class="card-body">${tt.result.substring(0,60)}${tt.result.length>60?'...':''}</div>`:''}
+    <div class="tags"><span class="tag ${sc[tt.status]||'a'}">${t(tt.status)||tt.status}</span></div>
+  </div>`).join('');
+}
+
+function renderDiseases(){
+  const q=gq(), el=document.getElementById('diseaseList');
+  const items=db.diseases.filter(d=>!q||d.name?.toLowerCase().includes(q));
+  if(!items.length){el.innerHTML=emptyEl('🩺');return;}
+  const sc={active:'a',cured:'g',chronic:'r'};
+  el.innerHTML=items.map(d=>`<div class="card dis" onclick="showDetail('disease','${d.id}')">
+    <div class="card-top"><div><div class="card-title">🩺 ${d.name}</div>${d.doctor?`<div class="card-sub">${d.doctor}</div>`:''}</div><div class="card-date">${fd(d.date)}</div></div>
+    ${d.notes?`<div class="card-body">${d.notes.substring(0,65)}${d.notes.length>65?'...':''}</div>`:''}
+    <div class="tags"><span class="tag ${sc[d.status]||'a'}">${t(d.status==='active'?'ongoing':d.status)||d.status}</span></div>
+  </div>`).join('');
+}
+
+function renderProfile(){
+  const p=db.profile;
+  document.getElementById('pName').textContent=p.name||'—';
+  document.getElementById('pMeta').textContent=[(p.age?(p.age+(lang==='bn'?' বছর':' yrs')):''),p.gender?t(p.gender):''].filter(Boolean).join(' · ')||'—';
+  document.getElementById('pBlood').textContent=p.blood||'?';
+  document.getElementById('pi-email').textContent=p.email||'—';
+  document.getElementById('pi-phone').textContent=p.phone||'—';
+  document.getElementById('pi-address').textContent=p.address||'—';
+  document.getElementById('pi-em').textContent=p.emergency||'—';
+  document.getElementById('pi-allergy').textContent=p.allergy||'—';
+  const parts=[];
+  if(p.blood) parts.push((lang==='bn'?'রক্ত: ':'Blood: ')+p.blood);
+  if(p.allergy) parts.push((lang==='bn'?'অ্যালার্জি: ':'Allergy: ')+p.allergy);
+  if(p.emergency) parts.push((lang==='bn'?'জরুরি: ':'Emergency: ')+p.emergency);
+  document.getElementById('al-body').textContent=parts.length?parts.join(' | '):t('emFill');
+}
+
+function renderRecent(){
+  const all=[
+    ...db.doctors.map(d=>({...d,_t:'doctor',_l:t('docLbl'),_i:'👨‍⚕️'})),
+    ...db.medicines.map(m=>({...m,_t:'medicine',_l:t('medLbl'),_i:'💊',date:m.start_date})),
+    ...db.tests.map(tt=>({...tt,_t:'test',_l:t('testLbl'),_i:'🧪'})),
+    ...db.diseases.map(d=>({...d,_t:'disease',_l:t('disLbl'),_i:'🩺'}))
+  ].sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,5);
+  const el=document.getElementById('recentList');
+  if(!all.length){el.innerHTML=emptyEl('📋');return;}
+  el.innerHTML=all.map(item=>`<div class="card ${item._t}" onclick="showDetail('${item._t}','${item.id}')">
+    <div class="card-top"><div><div class="card-title">${item._i} ${item.name}</div><div class="card-sub">${item._l}</div></div><div class="card-date">${fd(item.date)}</div></div>
+  </div>`).join('');
+}
+
+// ══════════════════════════════
+//  DETAIL
+// ══════════════════════════════
+function showDetail(type, id) {
+  const find=(arr,id)=>arr.find(x=>String(x.id)===String(id));
+  let item, html='';
+  const r=(lbl,val)=>val?`<div class="drow"><span class="dlbl">${lbl}</span><span class="dval">${val}</span></div>`:'';
+  if(type==='doctor'){
+    item=find(db.doctors,id);
+    html=`<div class="mtitle">👨‍⚕️ ${item.name}</div>${r(t('dSpec'),item.specialty)}${r(t('dHosp'),item.hospital)}${r(t('dDate'),fd(item.date))}${r(t('dFollow'),fd(item.followup))}${item.notes?`<div class="div"></div><div style="font-size:11px;color:var(--g5);margin-bottom:5px">${t('dNotes')}</div><div style="font-size:12.5px;line-height:1.7">${item.notes}</div>`:''}`;
+  } else if(type==='medicine'){
+    item=find(db.medicines,id);
+    html=`<div class="mtitle">💊 ${item.name}</div>${r(t('mDose'),item.dose)}${r(t('mSched'),item.schedule)}${r(t('mStart'),fd(item.start_date))}${r(t('mEnd'),fd(item.end_date))}${r(t('mFor'),item.for_disease)}${r(t('mStatus'),t(item.status))}`;
+  } else if(type==='test'){
+    item=find(db.tests,id);
+    html=`<div class="mtitle">🧪 ${item.name}</div>${r(t('tDate'),fd(item.date))}${r(t('tLab'),item.lab)}${r(t('tStatus'),t(item.status))}${item.result?`<div class="div"></div><div style="font-size:11px;color:var(--g5);margin-bottom:5px">${t('tRes')}</div><div style="font-size:12.5px;line-height:1.7">${item.result}</div>`:''} ${r(t('tNorm'),item.normal_range)}${item.notes?`<div class="div"></div><div style="font-size:12px;color:var(--g7)">${item.notes}</div>`:''}`;
+  } else if(type==='disease'){
+    item=find(db.diseases,id);
+    html=`<div class="mtitle">🩺 ${item.name}</div>${r(t('disDate'),fd(item.date))}${r(t('disDoc'),item.doctor)}${r(t('disStatus'),t(item.status==='active'?'ongoing':item.status))}${item.notes?`<div class="div"></div><div style="font-size:12.5px;line-height:1.7">${item.notes}</div>`:''}`;
+  }
+  delTarget={type,id};
+  document.getElementById('detailContent').innerHTML=html;
+  document.getElementById('ml-close').textContent=t('close');
+  document.getElementById('ml-delete').textContent='🗑️ '+t('delete');
+  document.getElementById('mo-detail').classList.add('open');
+}
+
+async function delRecord() {
+  if(!delTarget) return;
+  const tblMap={doctor:'doctors',medicine:'medicines',test:'tests',disease:'diseases'};
+  const arrMap={doctor:'doctors',medicine:'medicines',test:'tests',disease:'diseases'};
+  try {
+    await sbDelete(tblMap[delTarget.type], delTarget.id);
+    db[arrMap[delTarget.type]]=db[arrMap[delTarget.type]].filter(x=>String(x.id)!==String(delTarget.id));
+    closeModal('detail'); renderAll(); showToast(t('deleted')); delTarget=null;
+  } catch(e){ showToast('⚠️ '+t('connErr')); }
+}
+
+// ══════════════════════════════
+//  AI CHAT
+// ══════════════════════════════
+function buildQBtns(){
+  document.getElementById('qbtns').innerHTML=['q1','q2','q3','q4'].map(k=>`<button class="qbtn" onclick="sendQuick('${k}')">${t(k)}</button>`).join('');
+}
+
+function addMsg(text, role){
+  const el=document.createElement('div');
+  el.className='msg '+role;
+  if(role==='ai') el.innerHTML=`<div class="mlbl">🤖 AI</div>${text.replace(/\n/g,'<br>')}`;
+  else el.textContent=text;
+  document.getElementById('chatMsgs').appendChild(el);
+  el.scrollIntoView({behavior:'smooth'});
+  return el;
+}
+
+function patCtx(){
+  const p=db.profile;
+  const pStr=p.name?`Patient: ${p.name}, Age:${p.age||'?'}, Blood:${p.blood||'?'}, Allergy:${p.allergy||'none'}`:'No profile.';
+  const dStr=db.doctors.length?db.doctors.slice(0,5).map(d=>`- Dr.${d.name}(${d.specialty||'GP'}),${d.date||''},${d.notes||''}`).join('\n'):'None.';
+  const mStr=db.medicines.length?db.medicines.map(m=>`- ${m.name} ${m.dose||''} ${m.schedule||''} [${m.status}] for:${m.for_disease||'?'}`).join('\n'):'None.';
+  const tStr=db.tests.length?db.tests.slice(0,5).map(tt=>`- ${tt.name}(${tt.date||''}):${tt.result||''} [${tt.status}]`).join('\n'):'None.';
+  const disStr=db.diseases.length?db.diseases.map(d=>`- ${d.name}[${d.status}] dr:${d.doctor||'?'}`).join('\n'):'None.';
+  return `PATIENT RECORD:\n${pStr}\nDOCTOR VISITS:\n${dStr}\nMEDICINES:\n${mStr}\nTESTS:\n${tStr}\nDISEASES:\n${disStr}`;
+}
+
+async function sendQuick(k){ await sendMsg(t(k)); }
+async function sendChat(){
+  const inp=document.getElementById('chatInp');
+  const text=inp.value.trim(); if(!text) return;
+  inp.value=''; inp.style.height='auto';
+  await sendMsg(text);
+}
+
+async function sendMsg(userText){
+  addMsg(userText,'user');
+  chatHistory.push({role:'user',content:userText});
+  document.getElementById('sendBtn').disabled=true;
+  const thinkEl=addMsg(t('thinking'),'ai thinking');
+  const sysPrompt=`You are the AI assistant for "Neyamot Health Record" health record app used in Bangladesh. You have access to the patient's records below.\n\n${patCtx()}\n\nRules: Respond in the same language as the user (Bengali/English). Give helpful medical information based on their records. Always add a brief disclaimer for serious concerns. Be warm and practical. Do NOT diagnose or prescribe.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:sysPrompt,messages:chatHistory.slice(-10)})});
+    const data=await res.json();
+    const aiText=data.content?.map(c=>c.type==='text'?c.text:'').join('')||t('connErr');
+    thinkEl.className='msg ai';
+    thinkEl.innerHTML=`<div class="mlbl">🤖 AI</div>${aiText.replace(/\n/g,'<br>')}`;
+    chatHistory.push({role:'assistant',content:aiText});
+  } catch(e){
+    thinkEl.className='msg ai';
+    thinkEl.innerHTML=`<div class="mlbl">🤖 AI</div>${t('connErr')}`;
+  }
+  document.getElementById('sendBtn').disabled=false;
+}
+
+function autoR(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,85)+'px';}
+function chatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
+
+// ══════════════════════════════
+//  LIFESTYLE AI
+// ══════════════════════════════
+async function genLifestyle(){
+  document.getElementById('lsContent').innerHTML=`<div style="text-align:center;padding:32px;color:var(--g5)"><span class="ls-spin">🔄</span><p style="font-size:13px">${t('lsAnalyzing')}</p></div>`;
+  const sysP=lang==='bn'?'তুমি বিশেষজ্ঞ স্বাস্থ্য পরামর্শদাতা। রোগীর রেকর্ড দেখে বাংলায় JSON উত্তর দাও। শুধু JSON, অন্য কিছু নয়।':'You are an expert health advisor. Respond ONLY in valid JSON, nothing else.';
+  const userP=(lang==='bn'?`রোগীর তথ্য:\n${patCtx()}\n\nJSON ফরম্যাটে উত্তর দাও:\n{"score":75,"scoreLabel":"মোটামুটি ভালো","categories":[{"icon":"🍽️","title":"খাদ্যাভ্যাস","tips":["টিপস ১","টিপস ২","টিপস ৩"]},{"icon":"🏃","title":"ব্যায়াম","tips":["টিপস ১","টিপস ২"]},{"icon":"😴","title":"ঘুম","tips":["টিপস ১","টিপস ২"]},{"icon":"💧","title":"পানি","tips":["টিপস ১","টিপস ২"]},{"icon":"🧠","title":"মানসিক স্বাস্থ্য","tips":["টিপস ১","টিপস ২"]},{"icon":"💊","title":"ওষুধ ও চিকিৎসা","tips":["টিপস ১","টিপস ২"]}],"warning":"সতর্কতা যদি থাকে বা null"}`
+    :`Patient data:\n${patCtx()}\n\nRespond in JSON:\n{"score":75,"scoreLabel":"Fairly Good","categories":[{"icon":"🍽️","title":"Diet","tips":["tip1","tip2"]},{"icon":"🏃","title":"Exercise","tips":["tip1","tip2"]},{"icon":"😴","title":"Sleep","tips":["tip1","tip2"]},{"icon":"💧","title":"Hydration","tips":["tip1","tip2"]},{"icon":"🧠","title":"Mental Health","tips":["tip1","tip2"]},{"icon":"💊","title":"Medication","tips":["tip1","tip2"]}],"warning":"Warning if any or null"}`);
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:sysP,messages:[{role:'user',content:userP}]})});
+    const data=await res.json();
+    let raw=data.content?.map(c=>c.type==='text'?c.text:'').join('')||'{}';
+    raw=raw.replace(/```json|```/g,'').trim();
+    renderLS(JSON.parse(raw));
+  } catch(e){ document.getElementById('lsContent').innerHTML=`<div style="text-align:center;padding:32px;color:var(--red)"><div style="font-size:32px">⚠️</div><p style="font-size:13px;margin-top:8px">${t('connErr')}</p></div>`; }
+}
+
+function renderLS(data){
+  const sc=data.score>=75?'#059669':data.score>=50?'#d97706':'#dc2626';
+  let html=`<div class="ls-score" style="background:linear-gradient(135deg,${sc}cc,${sc})"><div class="ls-num">${data.score}</div><div class="ls-slbl">${data.scoreLabel} — ${t('lsScore')}</div></div>`;
+  if(data.warning&&data.warning!=='null') html+=`<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:9px;padding:9px 11px;margin-bottom:9px;font-size:11.5px;color:#7f1d1d;line-height:1.6"><strong>⚠️</strong> ${data.warning}</div>`;
+  (data.categories||[]).forEach(cat=>{
+    html+=`<div class="ls-card"><div class="ls-ctitle"><span style="font-size:17px">${cat.icon}</span>${cat.title}</div><div class="ls-body"><ul>${(cat.tips||[]).map(tip=>`<li>${tip}</li>`).join('')}</ul></div></div>`;
+  });
+  html+=`<p style="font-size:10px;color:var(--g5);text-align:center;margin-top:7px;line-height:1.6">${lang==='bn'?'⚠️ AI পরামর্শ। গুরুতর সমস্যায় ডাক্তার দেখান।':'⚠️ AI advice only. Consult a doctor for serious issues.'}</p>`;
+  document.getElementById('lsContent').innerHTML=html;
+}
+
+// ══════════════════════════════
+//  PDF REPORT
+// ══════════════════════════════
+function genPDF(){
+  const p=db.profile, bn=lang==='bn';
+  const dt=new Date().toLocaleDateString(bn?'bn-BD':'en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const emHtml=(p.emergency||p.allergy||p.blood)?`<div class="pr-emer"><strong>🚨 ${bn?'জরুরি তথ্য':'Emergency Information'}</strong>${p.blood?`<span>${bn?'রক্ত':'Blood'}: <strong>${p.blood}</strong> &nbsp;|&nbsp; </span>`:''}${p.allergy?`<span>${bn?'অ্যালার্জি':'Allergy'}: <strong>${p.allergy}</strong> &nbsp;|&nbsp; </span>`:''}${p.emergency?`<span>${bn?'জরুরি যোগাযোগ':'Emergency'}: <strong>${p.emergency}</strong></span>`:''}</div>`:'';
+  const docRows=db.doctors.slice(0,8).map(d=>`<tr><td>${d.name}</td><td>${d.specialty||'—'}</td><td>${d.hospital||'—'}</td><td>${fd(d.date)}</td><td style="font-size:9px;max-width:110px">${(d.notes||'—').substring(0,70)}</td></tr>`).join('');
+  const medRows=db.medicines.map(m=>`<tr><td>${m.name}</td><td>${m.dose||'—'}</td><td>${m.schedule||'—'}</td><td>${m.for_disease||'—'}</td><td><span class="pr-b ${m.status==='active'?'g':m.status==='stopped'?'r':'p'}">${t(m.status)}</span></td></tr>`).join('');
+  const tstRows=db.tests.slice(0,8).map(tt=>`<tr><td>${tt.name}</td><td>${fd(tt.date)}</td><td>${tt.lab||'—'}</td><td style="font-size:9px;max-width:100px">${(tt.result||'—').substring(0,55)}</td><td><span class="pr-b ${tt.status==='normal'?'g':tt.status==='abnormal'?'r':'a'}">${t(tt.status)}</span></td></tr>`).join('');
+  const disRows=db.diseases.map(d=>`<tr><td>${d.name}</td><td>${fd(d.date)}</td><td>${d.doctor||'—'}</td><td><span class="pr-b ${d.status==='cured'?'g':d.status==='chronic'?'r':'a'}">${t(d.status==='active'?'ongoing':d.status)}</span></td><td style="font-size:9px">${(d.notes||'—').substring(0,55)}</td></tr>`).join('');
+
+  const html=`<div class="pr">
+    <div class="pr-hdr">
+      <div><div class="pr-logo">🏥 Neyamot Health Record <small>${bn?'ব্যক্তিগত চিকিৎসা ইতিহাস':'Personal Medical History'}</small></div></div>
+      <div style="font-size:10px;color:#555;text-align:right"><div>${bn?'প্রিন্টের তারিখ':'Print Date'}: ${dt}</div><div style="margin-top:2px;font-size:9px;color:#999">neyamot-health.app</div></div>
+    </div>
+    <div class="pr-pat">
+      <div class="pr-pname">👤 ${p.name||'—'}</div>
+      <div class="pr-kv"><span class="pr-k">${bn?'বয়স':'Age'}:</span><span class="pr-v">${p.age?(p.age+(bn?' বছর':' yrs')):'—'}</span></div>
+      <div class="pr-kv"><span class="pr-k">${bn?'লিঙ্গ':'Gender'}:</span><span class="pr-v">${p.gender?t(p.gender):'—'}</span></div>
+      <div class="pr-kv"><span class="pr-k">${bn?'রক্ত':'Blood'}:</span><span class="pr-v" style="color:#dc2626;font-weight:700">${p.blood||'—'}</span></div>
+      <div class="pr-kv"><span class="pr-k">${bn?'মোবাইল':'Phone'}:</span><span class="pr-v">${p.phone||'—'}</span></div>
+      <div class="pr-kv"><span class="pr-k">${bn?'ঠিকানা':'Address'}:</span><span class="pr-v">${p.address||'—'}</span></div>
+    </div>
+    ${emHtml}
+    ${db.doctors.length?`<div class="pr-sec"><div class="pr-sh">👨‍⚕️ ${bn?'ডাক্তার ভিজিট':'Doctor Visits'} (${db.doctors.length})</div><table class="pr-tbl"><thead><tr><th>${bn?'ডাক্তার':'Doctor'}</th><th>${bn?'বিশেষজ্ঞ':'Specialty'}</th><th>${bn?'হাসপাতাল':'Hospital'}</th><th>${bn?'তারিখ':'Date'}</th><th>${bn?'মতামত':'Notes'}</th></tr></thead><tbody>${docRows}</tbody></table></div>`:''}
+    ${db.medicines.length?`<div class="pr-sec"><div class="pr-sh">💊 ${bn?'ওষুধের তালিকা':'Medicines'} (${db.medicines.length})</div><table class="pr-tbl"><thead><tr><th>${bn?'ওষুধ':'Medicine'}</th><th>${bn?'ডোজ':'Dose'}</th><th>${bn?'সময়':'Schedule'}</th><th>${bn?'কারণ':'For'}</th><th>${bn?'অবস্থা':'Status'}</th></tr></thead><tbody>${medRows}</tbody></table></div>`:''}
+    ${db.tests.length?`<div class="pr-sec"><div class="pr-sh">🧪 ${bn?'পরীক্ষার ফলাফল':'Test Results'} (${db.tests.length})</div><table class="pr-tbl"><thead><tr><th>${bn?'পরীক্ষা':'Test'}</th><th>${bn?'তারিখ':'Date'}</th><th>${bn?'ল্যাব':'Lab'}</th><th>${bn?'ফলাফল':'Result'}</th><th>${bn?'অবস্থা':'Status'}</th></tr></thead><tbody>${tstRows}</tbody></table></div>`:''}
+    ${db.diseases.length?`<div class="pr-sec"><div class="pr-sh">🩺 ${bn?'রোগ নির্ণয়':'Diagnoses'} (${db.diseases.length})</div><table class="pr-tbl"><thead><tr><th>${bn?'রোগ':'Disease'}</th><th>${bn?'তারিখ':'Date'}</th><th>${bn?'ডাক্তার':'Doctor'}</th><th>${bn?'অবস্থা':'Status'}</th><th>${bn?'বিবরণ':'Notes'}</th></tr></thead><tbody>${disRows}</tbody></table></div>`:''}
+    <div class="pr-foot">
+      <span>⚠️ ${bn?'এই রিপোর্ট তথ্যমূলক। চিকিৎসার জন্য ডাক্তারের পরামর্শ নিন।':'This report is informational. Always consult a qualified doctor.'}</span>
+      <span>${bn?'মোট':'Total'}: ${db.doctors.length+db.medicines.length+db.tests.length+db.diseases.length} ${bn?'রেকর্ড':'records'}</span>
+    </div>
+  </div>`;
+  const pa=document.getElementById('print-area');
+  pa.innerHTML=html; pa.style.display='block';
+  setTimeout(()=>{ window.print(); pa.style.display='none'; },300);
+}
+
+// ══════════════════════════════
+//  INIT
+// ══════════════════════════════
+const today=new Date().toISOString().split('T')[0];
+['d-date','m-start','t-date','dis-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=today; });
+
+// Check existing session
+(async()=>{
+  const {data:{session}} = await supa.auth.getSession();
+  if(!session){
+    // Show auth screen (already visible by default)
+  }
+})();
+</script>
+</body>
+</html>

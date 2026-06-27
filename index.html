@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Neyamot Health Record</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 :root{
@@ -750,7 +750,13 @@ textarea{resize:vertical;min-height:70px}
 // ══════════════════════════════
 const SUPA_URL = 'https://omahovwvsagcjqlxggji.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tYWhvdnd2c2FnY2pxbHhnZ2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDQ2NDcsImV4cCI6MjA5Nzk4MDY0N30.zxzYrhYAWQHsJtIjI2vgX3OT-hlV_hLINmZRlQVvQs0';
-const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+let supa;
+try {
+  supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+} catch(e) {
+  console.error('Supabase init error:', e);
+  document.getElementById('auth-screen').style.display = 'flex';
+}
 
 // ══════════════════════════════
 //  I18N
@@ -1604,9 +1610,22 @@ const today=new Date().toISOString().split('T')[0];
 
 // Check existing session
 (async()=>{
-  const {data:{session}} = await supa.auth.getSession();
-  if(!session){
-    // Show auth screen (already visible by default)
+  try {
+    const {data:{session}} = await supa.auth.getSession();
+    if(session?.user){
+      currentUser = session.user;
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('bnav').style.display = 'flex';
+      await loadAllData();
+      applyLang();
+    } else {
+      // কোনো session নেই — login screen দেখাও
+      document.getElementById('auth-screen').style.display = 'flex';
+    }
+  } catch(e){
+    console.error('Session check error:', e);
+    document.getElementById('auth-screen').style.display = 'flex';
   }
 })();
 </script>

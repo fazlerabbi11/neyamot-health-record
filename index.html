@@ -1004,23 +1004,28 @@ async function loadAllData() {
   const uid = currentUser.id;
   document.getElementById('syncDot').className = 'sync-dot offline';
   try {
-    const [d,m,tt,dis,p,v,tl] = await Promise.all([
+    const [d,m,tt,dis,v,tl] = await Promise.all([
       supa.from('doctors').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
       supa.from('medicines').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
       supa.from('tests').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
       supa.from('diseases').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-      supa.from('profiles').select('*').eq('user_id',uid).single(),
       supa.from('vitals').select('*').eq('user_id',uid).order('date',{ascending:false}),
       supa.from('timeline').select('*').eq('user_id',uid).order('date',{ascending:false}),
     ]);
     db.doctors=d.data||[]; db.medicines=m.data||[]; db.tests=tt.data||[]; db.diseases=dis.data||[];
     db.vitals=v.data||[]; db.timeline=tl.data||[];
-    db.profile=p.data||{};
-    const emailPhone=currentUser.email?.replace('@neyamot.health','')||'';
-    db.profile.phone=db.profile.phone||emailPhone;
-    db.profile.name=db.profile.name||currentUser.user_metadata?.full_name||'';
-    document.getElementById('syncDot').className='sync-dot';
-  } catch(e){document.getElementById('syncDot').className='sync-dot offline';}
+
+    // Profile আলাদাভাবে লোড করি — না থাকলে error হবে না
+    const {data:pData} = await supa.from('profiles').select('*').eq('user_id',uid).maybeSingle();
+    db.profile = pData || {};
+    const emailPhone = currentUser.email?.replace('@neyamot.health','')||'';
+    db.profile.phone = db.profile.phone || emailPhone;
+    db.profile.name = db.profile.name || currentUser.user_metadata?.full_name || '';
+    document.getElementById('syncDot').className = 'sync-dot';
+  } catch(e) {
+    console.error('loadAllData error:', e);
+    document.getElementById('syncDot').className = 'sync-dot offline';
+  }
   renderAll();
 }
 

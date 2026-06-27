@@ -551,7 +551,8 @@ textarea{resize:vertical;min-height:65px}
 <!-- PROFILE MODAL -->
 <div class="ov" id="mo-prof"><div class="modal"><div class="mh"></div><div class="mt">✏️ <span id="ml-eP"></span></div>
   <div class="fg"><label id="ml-fN"></label><input id="p-nm" type="text"></div>
-  <div class="fr"><div class="fg"><label id="ml-ag"></label><input id="p-ag" type="number"></div><div class="fg"><label id="ml-gn"></label><select id="p-gn"><option value="">—</option><option value="male" id="o-ml"></option><option value="female" id="o-fm"></option><option value="other" id="o-ot2"></option></select></div></div>
+  <div class="fr"><div class="fg"><label id="ml-dob">জন্মতারিখ</label><input id="p-dob" type="date" onchange="calcAge()"></div><div class="fg"><label id="ml-gn"></label><select id="p-gn"><option value="">—</option><option value="male" id="o-ml"></option><option value="female" id="o-fm"></option><option value="other" id="o-ot2"></option></select></div></div>
+  <div class="fg" id="age-display" style="display:none"><div style="background:var(--teal-light);border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--teal)">🎂 <span id="age-text"></span></div></div>
   <div class="fr"><div class="fg"><label id="ml-bl"></label><select id="p-bl"><option value="">?</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div><div class="fg"><label id="ml-ph"></label><input id="p-ph" type="tel"></div></div>
   <div class="fg"><label id="ml-ad"></label><input id="p-ad" type="text"></div>
   <div class="fg"><label id="ml-ec"></label><input id="p-ec" type="text"></div>
@@ -619,7 +620,7 @@ const T={
     aM:'ওষুধ যোগ করুন',mN:'ওষুধের নাম *',mD:'ডোজ',mSc:'সময়সূচী',mSt:'শুরু',mEn:'শেষ',mFr:'কোন রোগের জন্য',mSts:'অবস্থা',
     aT:'পরীক্ষা যোগ করুন',tN:'পরীক্ষার নাম *',tDt:'তারিখ',tLb:'ল্যাব',tRs:'ফলাফল',tNr:'স্বাভাবিক মান',tSt:'অবস্থা',tNo:'মন্তব্য',
     aDis:'রোগ নির্ণয় যোগ করুন',disN:'রোগের নাম *',disDt:'তারিখ',disSt:'অবস্থা',disNo:'বিবরণ',disDc:'চিকিৎসক',
-    fN:'পূর্ণ নাম',ag:'বয়স',gn:'লিঙ্গ',bl:'রক্তের গ্রুপ',
+    fN:'পূর্ণ নাম',dob:'জন্মতারিখ',ag:'বয়স',gn:'লিঙ্গ',bl:'রক্তের গ্রুপ',
     male:'পুরুষ',female:'মহিলা',other:'অন্যান্য',
     on:'দিনে ১ বার',tw:'দিনে ২ বার',th:'দিনে ৩ বার',bf:'খাওয়ার আগে',af:'খাওয়ার পরে',bd:'ঘুমানোর আগে',nd:'প্রয়োজনমতো',
     ac:'সক্রিয়',sp:'বন্ধ',cp:'সম্পন্ন',
@@ -662,7 +663,7 @@ const T={
     aM:'Add Medicine',mN:'Medicine Name *',mD:'Dose',mSc:'Schedule',mSt:'Start',mEn:'End',mFr:'For Disease',mSts:'Status',
     aT:'Add Test',tN:'Test Name *',tDt:'Date',tLb:'Lab',tRs:'Result',tNr:'Normal Range',tSt:'Status',tNo:'Notes',
     aDis:'Add Diagnosis',disN:'Disease Name *',disDt:'Date',disSt:'Status',disNo:'Description',disDc:'Doctor',
-    fN:'Full Name',ag:'Age',gn:'Gender',bl:'Blood Group',
+    fN:'Full Name',dob:'Date of Birth',ag:'Age',gn:'Gender',bl:'Blood Group',
     male:'Male',female:'Female',other:'Other',
     on:'Once daily',tw:'Twice daily',th:'Three times',bf:'Before meals',af:'After meals',bd:'At bedtime',nd:'As needed',
     ac:'Active',sp:'Stopped',cp:'Completed',
@@ -721,7 +722,7 @@ function applyLang(){
     'ml-aM':'aM','ml-mN':'mN','ml-mD':'mD','ml-mSc':'mSc','ml-mSt':'mSt','ml-mEn':'mEn','ml-mFr':'mFr','ml-mSts':'mSts',
     'ml-aT':'aT','ml-tN':'tN','ml-tDt':'tDt','ml-tLb':'tLb','ml-tRs':'tRs','ml-tNr':'tNr','ml-tSt':'tSt','ml-tNo':'tNo',
     'ml-aDis':'aDis','ml-disN':'disN','ml-disDt':'disDt','ml-disSt':'disSt','ml-disNo':'disNo','ml-disDc':'disDc',
-    'ml-eP':'ep','ml-fN':'fN','ml-ag':'ag','ml-gn':'gn','ml-bl':'bl','ml-ph':'ph','ml-ad':'addr','ml-ec':'em','ml-aly':'al',
+    'ml-eP':'ep','ml-fN':'fN','ml-dob':'dob','ml-ag':'ag','ml-gn':'gn','ml-bl':'bl','ml-ph':'ph','ml-ad':'addr','ml-ec':'em','ml-aly':'al',
     'ml-aBP':'aBP','ml-sys':'sys','ml-dia':'dia','ml-vsDt':'vsDt','ml-vsTm':'vsTm','ml-vsNo':'vsNo',
     'ml-aSG':'aSG','ml-sgV':'sgV','ml-sgT':'sgT','ml-sgDt':'vsDt','ml-sgTm':'vsTm',
     'ml-aWT':'aWT','ml-wtV':'wtV','ml-htV':'htV','ml-wtDt':'vsDt','ml-aHT':'aHT','ml-htO':'htO','ml-htDt':'vsDt',
@@ -862,10 +863,12 @@ function go(pg){
 function om(type){
   if(type==='prof'){
     const p=db.prof;
-    ['nm','ag','gn','bl','ph'].forEach(k=>{const e=document.getElementById('p-'+k);if(e)e.value=p[k]||'';});
+    ['nm','gn','bl','ph'].forEach(k=>{const e=document.getElementById('p-'+k);if(e)e.value=p[k]||'';});
+    document.getElementById('p-dob').value=p.dob||'';
     document.getElementById('p-ad').value=p.address||'';
     document.getElementById('p-ec').value=p.emergency||'';
     document.getElementById('p-aly').value=p.allergy||'';
+    calcAge();
   }
   document.getElementById('mo-'+type).classList.add('open');
 }
@@ -903,7 +906,9 @@ async function saveDis(){
   db.dis.unshift(r);cm('dis');rAll();showToast(t('saved'));}catch(e){showToast('⚠️ '+t('connE'));}
 }
 async function saveProf(){
-  const obj={name:document.getElementById('p-nm').value,age:document.getElementById('p-ag').value,gender:document.getElementById('p-gn').value,blood:document.getElementById('p-bl').value,phone:document.getElementById('p-ph').value,address:document.getElementById('p-ad').value,emergency:document.getElementById('p-ec').value,allergy:document.getElementById('p-aly').value};
+  const dob=document.getElementById('p-dob').value;
+  const age=dob?calcAgeFromDOB(dob):null;
+  const obj={name:document.getElementById('p-nm').value,dob,age,gender:document.getElementById('p-gn').value,blood:document.getElementById('p-bl').value,phone:document.getElementById('p-ph').value,address:document.getElementById('p-ad').value,emergency:document.getElementById('p-ec').value,allergy:document.getElementById('p-aly').value};
   try{await supa.from('profiles').upsert({...obj,user_id:user.id},{onConflict:'user_id'});
   db.prof={...obj,phone:obj.phone||db.prof.phone};cm('prof');rProf();showToast(t('profUp'));}catch(e){showToast('⚠️ '+t('connE'));}
 }
@@ -999,10 +1004,34 @@ function rDis(){
     <div class="tags"><span class="tag ${sc[d.status]||'a'}">${t(d.status==='active'?'og':d.status==='cured'?'cu':'ch')}</span></div>
   </div>`).join('');
 }
+function calcAgeFromDOB(dob){
+  if(!dob)return null;
+  const today=new Date(), birth=new Date(dob);
+  let age=today.getFullYear()-birth.getFullYear();
+  const m=today.getMonth()-birth.getMonth();
+  if(m<0||(m===0&&today.getDate()<birth.getDate()))age--;
+  return age;
+}
+function calcAge(){
+  const dob=document.getElementById('p-dob')?.value;
+  const disp=document.getElementById('age-display');
+  const txt=document.getElementById('age-text');
+  if(!dob||!disp||!txt){if(disp)disp.style.display='none';return;}
+  const age=calcAgeFromDOB(dob);
+  if(age!==null&&age>=0){
+    const bn=lang==='bn';
+    txt.textContent=(bn?'বয়স: ':'Age: ')+age+(bn?' বছর':' years');
+    disp.style.display='block';
+  } else {
+    disp.style.display='none';
+  }
+}
 function rProf(){
   const p=db.prof;
   document.getElementById('pNm').textContent=p.name||'—';
-  document.getElementById('pMt').textContent=[(p.age?(p.age+(lang==='bn'?' বছর':' yrs')):''),p.gender?t(p.gender==='male'?'male':p.gender==='female'?'female':'other'):''].filter(Boolean).join(' · ')||'—';
+  const age=p.dob?calcAgeFromDOB(p.dob):(p.age||null);
+  const ageStr=age!==null?(age+(lang==='bn'?' বছর':' yrs')):'';
+  document.getElementById('pMt').textContent=[ageStr,p.gender?t(p.gender==='male'?'male':p.gender==='female'?'female':'other'):''].filter(Boolean).join(' · ')||'—';
   document.getElementById('pBl').textContent=p.blood||'?';
   document.getElementById('pi-ph').textContent=p.phone||'—';
   document.getElementById('pi-addr').textContent=p.address||'—';

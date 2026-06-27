@@ -194,6 +194,31 @@ textarea{resize:vertical;min-height:70px}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;margin-left:5px;vertical-align:middle}
 .sync-dot.offline{background:#fbbf24}
 
+/* ── VITAL SIGNS ── */
+.vs-card{background:#fff;border-radius:var(--r);padding:13px;box-shadow:var(--sh);cursor:pointer;text-align:center;transition:transform .15s}
+.vs-card:active{transform:scale(.97)}
+.vs-ico{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;margin:0 auto 7px}
+.vs-label{font-size:10px;color:var(--g5);font-weight:600;margin-bottom:3px}
+.vs-val{font-size:22px;font-weight:700;color:#1e40af;line-height:1}
+.vs-unit{font-size:10px;color:var(--g5);margin-top:2px}
+
+/* ── TIMELINE ── */
+.tl-wrap{position:relative;padding-left:28px}
+.tl-wrap::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#7c3aed,#c4b5fd)}
+.tl-item{position:relative;margin-bottom:16px}
+.tl-dot{position:absolute;left:-22px;top:3px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid #fff;box-shadow:0 0 0 2px currentColor}
+.tl-dot.vaccine{background:#10b981;color:#fff}
+.tl-dot.surgery{background:#ef4444;color:#fff}
+.tl-dot.diagnosis{background:#f59e0b;color:#fff}
+.tl-dot.pregnancy{background:#ec4899;color:#fff}
+.tl-dot.hospital{background:#3b82f6;color:#fff}
+.tl-dot.test{background:#8b5cf6;color:#fff}
+.tl-dot.allergy{background:#f97316;color:#fff}
+.tl-dot.injury{background:#6b7280;color:#fff}
+.tl-dot.other{background:#14b8a6;color:#fff}
+.tl-card{background:#fff;border-radius:11px;padding:12px;box-shadow:var(--sh);cursor:pointer}
+.tl-year{font-size:10px;color:var(--g5);margin-bottom:10px;font-weight:700;padding-left:6px}
+
 /* ── PRINT ── */
 @media print{
   body{max-width:100%;padding:0;background:#fff}
@@ -384,6 +409,77 @@ textarea{resize:vertical;min-height:70px}
   </div>
 </div>
 
+<!-- VITAL SIGNS PAGE -->
+<div class="pg-nopad" id="pg-vitals">
+  <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:13px 15px;display:flex;align-items:center;gap:9px">
+    <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">❤️</div>
+    <div><div style="font-size:14px;font-weight:700" id="sl-vsTitle"></div><div style="font-size:11px;opacity:.8" id="sl-vsSub"></div></div>
+  </div>
+  <div style="padding:13px">
+    <!-- VITAL CARDS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px">
+      <div class="vs-card" onclick="openModal('vital-bp')">
+        <div class="vs-ico" style="background:#fee2e2">🩸</div>
+        <div class="vs-label" id="sl-bp"></div>
+        <div class="vs-val" id="vs-bp">—</div>
+        <div class="vs-unit">mmHg</div>
+      </div>
+      <div class="vs-card" onclick="openModal('vital-sugar')">
+        <div class="vs-ico" style="background:#fef3c7">🍬</div>
+        <div class="vs-label" id="sl-sugar"></div>
+        <div class="vs-val" id="vs-sugar">—</div>
+        <div class="vs-unit">mg/dL</div>
+      </div>
+      <div class="vs-card" onclick="openModal('vital-weight')">
+        <div class="vs-ico" style="background:#dcfce7">⚖️</div>
+        <div class="vs-label" id="sl-weight"></div>
+        <div class="vs-val" id="vs-weight">—</div>
+        <div class="vs-unit">kg</div>
+      </div>
+      <div class="vs-card" onclick="openModal('vital-height')">
+        <div class="vs-ico" style="background:#eff6ff">📏</div>
+        <div class="vs-label" id="sl-height"></div>
+        <div class="vs-val" id="vs-height">—</div>
+        <div class="vs-unit">cm</div>
+      </div>
+    </div>
+    <!-- BMI CARD -->
+    <div id="bmiCard" style="background:#fff;border-radius:var(--r);padding:14px;box-shadow:var(--sh);margin-bottom:13px;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:12px;color:var(--g5);font-weight:600">BMI</div>
+          <div style="font-size:28px;font-weight:700;color:var(--teal)" id="bmiVal">—</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;font-weight:700" id="bmiStatus"></div>
+          <div style="font-size:11px;color:var(--g5);margin-top:3px" id="bmiRange"></div>
+        </div>
+      </div>
+      <div style="background:var(--g1);border-radius:10px;height:8px;margin-top:10px;overflow:hidden">
+        <div id="bmiBar" style="height:100%;border-radius:10px;transition:width .5s"></div>
+      </div>
+    </div>
+    <!-- HISTORY -->
+    <div class="sec-hdr"><div class="sec-title" id="sl-vsHistory"></div><button class="btn-add" onclick="openModal('vital-bp')">+ <span id="sl-vsAdd"></span></button></div>
+    <div id="vitalList"></div>
+  </div>
+</div>
+
+<!-- LIFE TIMELINE PAGE -->
+<div class="pg-nopad" id="pg-timeline">
+  <div style="background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;padding:13px 15px;display:flex;align-items:center;gap:9px">
+    <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📅</div>
+    <div><div style="font-size:14px;font-weight:700" id="sl-tlTitle"></div><div style="font-size:11px;opacity:.8" id="sl-tlSub"></div></div>
+  </div>
+  <div style="padding:13px">
+    <div class="sec-hdr">
+      <div class="sec-title" id="sl-tlEvents"></div>
+      <button class="btn-add" style="background:#7c3aed" onclick="openModal('timeline')">+ <span id="sl-tlAdd"></span></button>
+    </div>
+    <div id="timelineList"></div>
+  </div>
+</div>
+
 <!-- PROFILE -->
 <div class="pg" id="pg-profile">
   <div class="prof-card">
@@ -531,6 +627,99 @@ textarea{resize:vertical;min-height:70px}
   </div>
 </div>
 
+<!-- VITAL SIGNS MODAL -->
+<div class="overlay" id="mo-vital-bp">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">🩸 <span id="ml-addBP"></span></div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-systolic"></label><input id="vs-sys" type="number" placeholder="120"></div>
+      <div class="fgrp"><label id="ml-diastolic"></label><input id="vs-dia" type="number" placeholder="80"></div>
+    </div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-vsDate"></label><input id="vs-date" type="date"></div>
+      <div class="fgrp"><label id="ml-vsTime"></label><input id="vs-time" type="time"></div>
+    </div>
+    <div class="fgrp"><label id="ml-vsNotes"></label><input id="vs-notes" type="text"></div>
+    <button class="mbtn primary" onclick="saveVital('bp')">💾 <span id="ml-vsSave"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('vital-bp')"><span id="ml-vsCancel"></span></button>
+  </div>
+</div>
+<div class="overlay" id="mo-vital-sugar">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">🍬 <span id="ml-addSugar"></span></div>
+    <div class="fgrp"><label id="ml-sugarVal"></label><input id="vs-sugar-val" type="number" placeholder="100"></div>
+    <div class="fgrp"><label id="ml-sugarType"></label>
+      <select id="vs-sugar-type">
+        <option value="fasting" id="mo-fasting"></option>
+        <option value="random" id="mo-random"></option>
+        <option value="pp" id="mo-pp"></option>
+        <option value="hba1c" id="mo-hba1c"></option>
+      </select>
+    </div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-sugarDate"></label><input id="vs-sugar-date" type="date"></div>
+      <div class="fgrp"><label id="ml-sugarTime"></label><input id="vs-sugar-time" type="time"></div>
+    </div>
+    <button class="mbtn primary" onclick="saveVital('sugar')">💾 <span id="ml-sugarSave"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('vital-sugar')"><span id="ml-sugarCancel"></span></button>
+  </div>
+</div>
+<div class="overlay" id="mo-vital-weight">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">⚖️ <span id="ml-addWeight"></span></div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-weightVal"></label><input id="vs-weight-val" type="number" placeholder="65" step="0.1"></div>
+      <div class="fgrp"><label id="ml-heightVal"></label><input id="vs-height-val" type="number" placeholder="165"></div>
+    </div>
+    <div class="fgrp"><label id="ml-weightDate"></label><input id="vs-weight-date" type="date"></div>
+    <button class="mbtn primary" onclick="saveVital('weight')">💾 <span id="ml-weightSave"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('vital-weight')"><span id="ml-weightCancel"></span></button>
+  </div>
+</div>
+<div class="overlay" id="mo-vital-height">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">📏 <span id="ml-addHeight"></span></div>
+    <div class="fgrp"><label id="ml-heightOnly"></label><input id="vs-height-only" type="number" placeholder="165"></div>
+    <div class="fgrp"><label id="ml-heightDate"></label><input id="vs-height-date" type="date"></div>
+    <button class="mbtn primary" onclick="saveVital('height')">💾 <span id="ml-heightSave"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('vital-height')"><span id="ml-heightCancel"></span></button>
+  </div>
+</div>
+
+<!-- TIMELINE MODAL -->
+<div class="overlay" id="mo-timeline">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">📅 <span id="ml-addTL"></span></div>
+    <div class="fgrp"><label id="ml-tlTitle2"></label><input id="tl-title" type="text" placeholder="যেমন: করোনা টিকা, অ্যাপেন্ডিক্স অপারেশন"></div>
+    <div class="fgrp"><label id="ml-tlType"></label>
+      <select id="tl-type">
+        <option value="vaccine" id="mo-tl-vaccine"></option>
+        <option value="surgery" id="mo-tl-surgery"></option>
+        <option value="diagnosis" id="mo-tl-diagnosis"></option>
+        <option value="pregnancy" id="mo-tl-pregnancy"></option>
+        <option value="hospital" id="mo-tl-hospital"></option>
+        <option value="test" id="mo-tl-test"></option>
+        <option value="allergy" id="mo-tl-allergy"></option>
+        <option value="injury" id="mo-tl-injury"></option>
+        <option value="other" id="mo-tl-other"></option>
+      </select>
+    </div>
+    <div class="frow">
+      <div class="fgrp"><label id="ml-tlDate"></label><input id="tl-date" type="date"></div>
+      <div class="fgrp"><label id="ml-tlAge"></label><input id="tl-age" type="number" placeholder="25"></div>
+    </div>
+    <div class="fgrp"><label id="ml-tlHosp"></label><input id="tl-hosp" type="text"></div>
+    <div class="fgrp"><label id="ml-tlNotes"></label><textarea id="tl-notes" style="min-height:60px"></textarea></div>
+    <button class="mbtn primary" style="background:#7c3aed" onclick="saveTL()">💾 <span id="ml-tlSave"></span></button>
+    <button class="mbtn cancel" onclick="closeModal('timeline')"><span id="ml-tlCancel"></span></button>
+  </div>
+</div>
+
 <!-- DETAIL MODAL -->
 <div class="overlay" id="mo-detail">
   <div class="modal">
@@ -550,9 +739,9 @@ textarea{resize:vertical;min-height:70px}
 <div class="bnav" id="bnav" style="display:none">
   <div class="ni active" onclick="showPg('home')" id="ni-home"><span class="ni-ico">🏠</span><span class="ni-lbl" id="nl-home"></span><div class="ndot"></div></div>
   <div class="ni" onclick="showPg('doctors')" id="ni-doctors"><span class="ni-ico">👨‍⚕️</span><span class="ni-lbl" id="nl-doc"></span><div class="ndot"></div></div>
-  <div class="ni" onclick="showPg('medicines')" id="ni-medicines"><span class="ni-ico">💊</span><span class="ni-lbl" id="nl-med"></span><div class="ndot"></div></div>
+  <div class="ni" onclick="showPg('vitals')" id="ni-vitals"><span class="ni-ico">❤️</span><span class="ni-lbl" id="nl-vitals"></span><div class="ndot" style="background:#3b82f6"></div></div>
+  <div class="ni" onclick="showPg('timeline')" id="ni-timeline"><span class="ni-ico">📅</span><span class="ni-lbl" id="nl-timeline"></span><div class="ndot" style="background:#7c3aed"></div></div>
   <div class="ni ai-ni" onclick="showPg('ai')" id="ni-ai"><span class="ni-ico">🤖</span><span class="ni-lbl" id="nl-ai"></span><div class="ndot"></div></div>
-  <div class="ni ls-ni" onclick="showPg('lifestyle')" id="ni-lifestyle"><span class="ni-ico">🌿</span><span class="ni-lbl" id="nl-ls"></span><div class="ndot"></div></div>
 </div>
 
 <script>
@@ -603,6 +792,24 @@ const T = {
     visitDone:'ভিজিট সম্পন্ন', docLbl:'ডাক্তার ভিজিট', medLbl:'ওষুধ', testLbl:'পরীক্ষা', disLbl:'রোগ নির্ণয়',
     searchPh:'ডাক্তার, ওষুধ বা রোগ খুঁজুন...',
     syncing:'ক্লাউডে সংযুক্ত',
+    vsTitle:'ভাইটাল সাইনস', vsSub:'রক্তচাপ, ডায়াবেটিস, ওজন, উচ্চতা',
+    bp:'রক্তচাপ', sugar:'রক্তে শর্করা', weight:'ওজন', height:'উচ্চতা',
+    vsHistory:'পরিমাপের ইতিহাস', vsAdd:'যোগ করুন',
+    addBP:'রক্তচাপ যোগ করুন', systolic:'সিস্টোলিক (উপর)', diastolic:'ডায়াস্টোলিক (নিচ)',
+    vsDate:'তারিখ', vsTime:'সময়', vsNotes:'মন্তব্য', vsSave:'সংরক্ষণ', vsCancel:'বাতিল',
+    addSugar:'রক্তে শর্করা যোগ করুন', sugarVal:'মান (mg/dL)', sugarType:'ধরন',
+    fasting:'খালি পেটে', random:'যেকোনো সময়', pp:'খাওয়ার পরে', hba1c:'HbA1c (%)',
+    addWeight:'ওজন ও উচ্চতা', weightVal:'ওজন (kg)', heightVal:'উচ্চতা (cm)',
+    heightOnly:'উচ্চতা (cm)',
+    tlTitle:'জীবন টাইমলাইন', tlSub:'জন্ম থেকে এখন পর্যন্ত স্বাস্থ্য ইতিহাস',
+    tlEvents:'সব স্বাস্থ্য ঘটনা', tlAdd:'ঘটনা যোগ করুন',
+    addTL:'স্বাস্থ্য ঘটনা যোগ করুন', tlTitle2:'ঘটনার শিরোনাম *', tlType:'ধরন',
+    tlDate:'তারিখ', tlAge:'বয়স (তখন)', tlHosp:'হাসপাতাল/স্থান', tlNotes:'বিবরণ',
+    tlSave:'সংরক্ষণ', tlCancel:'বাতিল',
+    vaccine:'টিকা 💉', surgery:'অপারেশন 🔪', diagnosis:'রোগ নির্ণয় 🩺',
+    pregnancy:'গর্ভাবস্থা 🤰', hospital:'হাসপাতালে ভর্তি 🏥',
+    test:'গুরুত্বপূর্ণ পরীক্ষা 🧪', allergy:'অ্যালার্জি ⚠️', injury:'আঘাত 🤕', other:'অন্যান্য 📌',
+    nlVitals:'ভাইটাল', nlTimeline:'টাইমলাইন',
   },
   en:{
     home:'Home', doctor:'Doctor', medicine:'Med', test:'Tests', aiNav:'AI', lsNav:'Lifestyle',
@@ -640,12 +847,30 @@ const T = {
     visitDone:'Visit complete', docLbl:'Doctor Visit', medLbl:'Medicine', testLbl:'Test', disLbl:'Diagnosis',
     searchPh:'Search doctors, medicines, diseases...',
     syncing:'Connected to cloud',
+    vsTitle:'Vital Signs', vsSub:'BP, Blood Sugar, Weight, Height',
+    bp:'Blood Pressure', sugar:'Blood Sugar', weight:'Weight', height:'Height',
+    vsHistory:'Measurement History', vsAdd:'Add',
+    addBP:'Add Blood Pressure', systolic:'Systolic (top)', diastolic:'Diastolic (bottom)',
+    vsDate:'Date', vsTime:'Time', vsNotes:'Notes', vsSave:'Save', vsCancel:'Cancel',
+    addSugar:'Add Blood Sugar', sugarVal:'Value (mg/dL)', sugarType:'Type',
+    fasting:'Fasting', random:'Random', pp:'Post-meal', hba1c:'HbA1c (%)',
+    addWeight:'Weight & Height', weightVal:'Weight (kg)', heightVal:'Height (cm)',
+    heightOnly:'Height (cm)',
+    tlTitle:'Life Timeline', tlSub:'Health history from birth to now',
+    tlEvents:'All Health Events', tlAdd:'Add Event',
+    addTL:'Add Health Event', tlTitle2:'Event Title *', tlType:'Type',
+    tlDate:'Date', tlAge:'Age (at the time)', tlHosp:'Hospital/Place', tlNotes:'Description',
+    tlSave:'Save', tlCancel:'Cancel',
+    vaccine:'Vaccine 💉', surgery:'Surgery 🔪', diagnosis:'Diagnosis 🩺',
+    pregnancy:'Pregnancy 🤰', hospital:'Hospitalization 🏥',
+    test:'Important Test 🧪', allergy:'Allergy ⚠️', injury:'Injury 🤕', other:'Other 📌',
+    nlVitals:'Vitals', nlTimeline:'Timeline',
   }
 };
 
 let lang = localStorage.getItem('ra_lang') || 'bn';
 let currentUser = null;
-let db = {doctors:[], medicines:[], tests:[], diseases:[], profile:{}};
+let db = {doctors:[], medicines:[], tests:[], diseases:[], profile:{}, vitals:[], timeline:[]};
 let chatHistory = [];
 let delTarget = null;
 
@@ -750,7 +975,7 @@ async function doSignup() {
 
 async function doLogout() {
   await supa.auth.signOut();
-  currentUser = null; db = {doctors:[],medicines:[],tests:[],diseases:[],profile:{}};
+  currentUser = null; db = {doctors:[],medicines:[],tests:[],diseases:[],profile:{},vitals:[],timeline:[]};
   chatHistory = [];
   document.getElementById('app').style.display = 'none';
   document.getElementById('bnav').style.display = 'none';
@@ -779,21 +1004,23 @@ async function loadAllData() {
   const uid = currentUser.id;
   document.getElementById('syncDot').className = 'sync-dot offline';
   try {
-    const [d,m,t,dis,p] = await Promise.all([
+    const [d,m,tt,dis,p,v,tl] = await Promise.all([
       supa.from('doctors').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
       supa.from('medicines').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
       supa.from('tests').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
       supa.from('diseases').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-      supa.from('profiles').select('*').eq('user_id',uid).single()
+      supa.from('profiles').select('*').eq('user_id',uid).single(),
+      supa.from('vitals').select('*').eq('user_id',uid).order('date',{ascending:false}),
+      supa.from('timeline').select('*').eq('user_id',uid).order('date',{ascending:false}),
     ]);
-    db.doctors = d.data||[]; db.medicines = m.data||[]; db.tests = t.data||[]; db.diseases = dis.data||[];
-    db.profile = p.data||{};
-    // মোবাইল নম্বর email থেকে বের করি
-    const emailPhone = currentUser.email?.replace('@neyamot.health','') || '';
-    db.profile.phone = db.profile.phone || emailPhone;
-    db.profile.name = db.profile.name || currentUser.user_metadata?.full_name || '';
-    document.getElementById('syncDot').className = 'sync-dot';
-  } catch(e) { document.getElementById('syncDot').className = 'sync-dot offline'; }
+    db.doctors=d.data||[]; db.medicines=m.data||[]; db.tests=tt.data||[]; db.diseases=dis.data||[];
+    db.vitals=v.data||[]; db.timeline=tl.data||[];
+    db.profile=p.data||{};
+    const emailPhone=currentUser.email?.replace('@neyamot.health','')||'';
+    db.profile.phone=db.profile.phone||emailPhone;
+    db.profile.name=db.profile.name||currentUser.user_metadata?.full_name||'';
+    document.getElementById('syncDot').className='sync-dot';
+  } catch(e){document.getElementById('syncDot').className='sync-dot offline';}
   renderAll();
 }
 
@@ -837,6 +1064,15 @@ function applyLang() {
     'ml-editProf':'editProf','ml-fullname':'fullname','ml-age':'age','ml-gender':'gender','ml-blood':'blood','ml-phone':'phone','ml-addr':'address','ml-emCon':'emContact','ml-allergy':'allergy',
     'ml-save':'save','ml-cancel':'cancel','ml-save2':'save','ml-cancel2':'cancel','ml-save3':'save','ml-cancel3':'cancel','ml-save4':'save','ml-cancel4':'cancel','ml-save5':'save','ml-cancel5':'cancel',
     'ml-close':'close','ml-delete':'delete',
+    'sl-vsTitle':'vsTitle','sl-vsSub':'vsSub','sl-bp':'bp','sl-sugar':'sugar','sl-weight':'weight','sl-height':'height',
+    'sl-vsHistory':'vsHistory','sl-vsAdd':'vsAdd',
+    'ml-addBP':'addBP','ml-systolic':'systolic','ml-diastolic':'diastolic','ml-vsDate':'vsDate','ml-vsTime':'vsTime','ml-vsNotes':'vsNotes','ml-vsSave':'vsSave','ml-vsCancel':'vsCancel',
+    'ml-addSugar':'addSugar','ml-sugarVal':'sugarVal','ml-sugarType':'sugarType','ml-sugarDate':'vsDate','ml-sugarTime':'vsTime','ml-sugarSave':'vsSave','ml-sugarCancel':'vsCancel',
+    'ml-addWeight':'addWeight','ml-weightVal':'weightVal','ml-heightVal':'heightVal','ml-weightDate':'vsDate','ml-weightSave':'vsSave','ml-weightCancel':'vsCancel',
+    'ml-addHeight':'height','ml-heightOnly':'heightOnly','ml-heightDate':'vsDate','ml-heightSave':'vsSave','ml-heightCancel':'vsCancel',
+    'sl-tlTitle':'tlTitle','sl-tlSub':'tlSub','sl-tlEvents':'tlEvents','sl-tlAdd':'tlAdd',
+    'ml-addTL':'addTL','ml-tlTitle2':'tlTitle2','ml-tlType':'tlType','ml-tlDate':'tlDate','ml-tlAge':'tlAge','ml-tlHosp':'tlHosp','ml-tlNotes':'tlNotes','ml-tlSave':'tlSave','ml-tlCancel':'tlCancel',
+    'nl-vitals':'nlVitals','nl-timeline':'nlTimeline',
   };
   Object.entries(map).forEach(([id,key])=>{ const el=document.getElementById(id); if(el) el.textContent=t(key); });
 
@@ -847,6 +1083,10 @@ function applyLang() {
     'mo-normal':'normal','mo-abnormal':'abnormal','mo-pending':'pending',
     'mo-ongoing':'ongoing','mo-cured':'cured','mo-chronic':'chronic',
     'mo-male':'male','mo-female':'female','mo-other':'other',
+    'mo-fasting':'fasting','mo-random':'random','mo-pp':'pp','mo-hba1c':'hba1c',
+    'mo-tl-vaccine':'vaccine','mo-tl-surgery':'surgery','mo-tl-diagnosis':'diagnosis',
+    'mo-tl-pregnancy':'pregnancy','mo-tl-hospital':'hospital','mo-tl-test':'test',
+    'mo-tl-allergy':'allergy','mo-tl-injury':'injury','mo-tl-other':'other',
   };
   const schedVals = ['once','twice','thrice','before','after','bed','needed'];
   Object.entries(optMap).forEach(([id,key])=>{ const el=document.getElementById(id); if(el){ el.textContent=t(key); if(schedVals.includes(key)) el.value=t(key); } });
@@ -955,7 +1195,7 @@ async function saveProfile() {
 function fd(d){ if(!d) return ''; try{ return new Date(d).toLocaleDateString(lang==='bn'?'bn-BD':'en-GB',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return d; } }
 function gq(){ return document.getElementById('searchInput').value.toLowerCase(); }
 
-function renderAll(){ renderStats();renderDoctors();renderMedicines();renderTests();renderDiseases();renderProfile();renderRecent(); }
+function renderAll(){ renderStats();renderDoctors();renderMedicines();renderTests();renderDiseases();renderProfile();renderRecent();renderVitals();renderTimeline(); }
 
 function renderStats(){
   document.getElementById('st-d').textContent=db.doctors.length;
@@ -1207,6 +1447,148 @@ function genPDF(){
   const pa=document.getElementById('print-area');
   pa.innerHTML=html; pa.style.display='block';
   setTimeout(()=>{ window.print(); pa.style.display='none'; },300);
+}
+
+// ══════════════════════════════
+//  VITAL SIGNS
+// ══════════════════════════════
+async function saveVital(type) {
+  let obj = {type, date: document.getElementById('vs-date')?.value || document.getElementById('vs-sugar-date')?.value || document.getElementById('vs-weight-date')?.value || document.getElementById('vs-height-date')?.value || today};
+  if(type==='bp'){
+    const sys=document.getElementById('vs-sys').value;
+    const dia=document.getElementById('vs-dia').value;
+    if(!sys||!dia){showToast('⚠️ মান দিন');return;}
+    obj.value = sys+'/'+dia; obj.systolic=parseInt(sys); obj.diastolic=parseInt(dia);
+    obj.time=document.getElementById('vs-time').value;
+    obj.notes=document.getElementById('vs-notes').value;
+    obj.date=document.getElementById('vs-date').value;
+  } else if(type==='sugar'){
+    const val=document.getElementById('vs-sugar-val').value;
+    if(!val){showToast('⚠️ মান দিন');return;}
+    obj.value=val; obj.sugar_type=document.getElementById('vs-sugar-type').value;
+    obj.date=document.getElementById('vs-sugar-date').value;
+    obj.time=document.getElementById('vs-sugar-time').value;
+  } else if(type==='weight'){
+    const w=document.getElementById('vs-weight-val').value;
+    const h=document.getElementById('vs-height-val').value;
+    if(!w){showToast('⚠️ ওজন দিন');return;}
+    obj.value=w; obj.height_cm=h||null; obj.date=document.getElementById('vs-weight-date').value;
+  } else if(type==='height'){
+    const h=document.getElementById('vs-height-only').value;
+    if(!h){showToast('⚠️ উচ্চতা দিন');return;}
+    obj.value=h; obj.date=document.getElementById('vs-height-date').value;
+  }
+  try {
+    const rec=await sbInsert('vitals',obj);
+    db.vitals.unshift(rec);
+    closeModal('vital-'+type); renderVitals(); showToast(t('saved'));
+  } catch(e){showToast('⚠️ '+t('connErr'));}
+}
+
+function renderVitals(){
+  const latest={bp:null,sugar:null,weight:null,height:null};
+  (db.vitals||[]).forEach(v=>{if(!latest[v.type]) latest[v.type]=v;});
+  document.getElementById('vs-bp').textContent=latest.bp?latest.bp.value:'—';
+  document.getElementById('vs-sugar').textContent=latest.sugar?latest.sugar.value:'—';
+  document.getElementById('vs-weight').textContent=latest.weight?latest.weight.value+'kg':'—';
+  document.getElementById('vs-height').textContent=latest.height?latest.height.value+'cm':(latest.weight?.height_cm?latest.weight.height_cm+'cm':'—');
+  // BMI
+  const w=parseFloat(latest.weight?.value);
+  const hCm=parseFloat(latest.height?.value||latest.weight?.height_cm);
+  if(w&&hCm){
+    const h=hCm/100; const bmi=(w/(h*h)).toFixed(1);
+    let status,color,pct;
+    if(bmi<18.5){status=lang==='bn'?'কম ওজন':'Underweight';color='#3b82f6';pct=20;}
+    else if(bmi<25){status=lang==='bn'?'স্বাভাবিক ✅':'Normal ✅';color='#10b981';pct=45;}
+    else if(bmi<30){status=lang==='bn'?'অতিরিক্ত ওজন':'Overweight';color='#f59e0b';pct=65;}
+    else{status=lang==='bn'?'স্থূলতা ⚠️':'Obese ⚠️';color='#ef4444';pct=85;}
+    document.getElementById('bmiVal').textContent=bmi;
+    document.getElementById('bmiStatus').textContent=status;
+    document.getElementById('bmiStatus').style.color=color;
+    document.getElementById('bmiRange').textContent='Normal: 18.5–24.9';
+    document.getElementById('bmiBar').style.width=pct+'%';
+    document.getElementById('bmiBar').style.background=color;
+    document.getElementById('bmiCard').style.display='block';
+  }
+  // History list
+  const el=document.getElementById('vitalList');
+  if(!(db.vitals||[]).length){el.innerHTML=emptyEl('❤️');return;}
+  const icons={bp:'🩸',sugar:'🍬',weight:'⚖️',height:'📏'};
+  const labels={bp:t('bp'),sugar:t('sugar'),weight:t('weight'),height:t('height')};
+  el.innerHTML=(db.vitals||[]).slice(0,20).map(v=>`
+    <div class="card" style="border-left:4px solid #3b82f6" onclick="delVital('${v.id}')">
+      <div class="card-top">
+        <div><div class="card-title">${icons[v.type]||'📊'} ${labels[v.type]||v.type}: <span style="color:#1e40af">${v.value}${v.type==='bp'?' mmHg':v.type==='sugar'?' mg/dL':v.type==='weight'?' kg':' cm'}</span></div>
+        ${v.sugar_type?`<div class="card-sub">${t(v.sugar_type)}</div>`:''}
+        ${v.notes?`<div class="card-body">${v.notes}</div>`:''}</div>
+        <div class="card-date">${fd(v.date)}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function delVital(id){
+  if(!confirm(lang==='bn'?'মুছে ফেলবেন?':'Delete this?')) return;
+  try{
+    await sbDelete('vitals',id);
+    db.vitals=db.vitals.filter(v=>v.id!==id);
+    renderVitals(); showToast(t('deleted'));
+  }catch(e){showToast('⚠️ '+t('connErr'));}
+}
+
+// ══════════════════════════════
+//  LIFE TIMELINE
+// ══════════════════════════════
+async function saveTL(){
+  const title=document.getElementById('tl-title').value.trim();
+  if(!title){showToast('⚠️ '+t('nameReq'));return;}
+  const obj={title, type:document.getElementById('tl-type').value, date:document.getElementById('tl-date').value, age_at_event:document.getElementById('tl-age').value||null, hospital:document.getElementById('tl-hosp').value, notes:document.getElementById('tl-notes').value};
+  try{
+    const rec=await sbInsert('timeline',obj);
+    db.timeline.unshift(rec);
+    db.timeline.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+    closeModal('timeline'); renderTimeline(); showToast(t('saved'));
+    ['tl-title','tl-hosp','tl-notes','tl-age'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){showToast('⚠️ '+t('connErr'));}
+}
+
+function renderTimeline(){
+  const el=document.getElementById('timelineList');
+  if(!(db.timeline||[]).length){el.innerHTML=emptyEl('📅');return;}
+  const typeIcons={vaccine:'💉',surgery:'🔪',diagnosis:'🩺',pregnancy:'🤰',hospital:'🏥',test:'🧪',allergy:'⚠️',injury:'🤕',other:'📌'};
+  // Group by year
+  const byYear={};
+  (db.timeline||[]).forEach(ev=>{
+    const yr=ev.date?new Date(ev.date).getFullYear():(lang==='bn'?'অজানা':'Unknown');
+    if(!byYear[yr]) byYear[yr]=[];
+    byYear[yr].push(ev);
+  });
+  const years=Object.keys(byYear).sort((a,b)=>b-a);
+  el.innerHTML=`<div class="tl-wrap">${years.map(yr=>`
+    <div class="tl-year">── ${yr} ──</div>
+    ${byYear[yr].map(ev=>`
+      <div class="tl-item">
+        <div class="tl-dot ${ev.type||'other'}">${typeIcons[ev.type]||'📌'}</div>
+        <div class="tl-card" onclick="delTL('${ev.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:13px;font-weight:700">${ev.title}</div>
+              <div style="font-size:10.5px;color:var(--g5);margin-top:2px">${t(ev.type)||ev.type}${ev.age_at_event?' · '+(lang==='bn'?'বয়স':'Age')+': '+ev.age_at_event:''}${ev.hospital?' · '+ev.hospital:''}</div>
+            </div>
+            <div style="font-size:10px;color:var(--g5);white-space:nowrap;margin-left:8px">${fd(ev.date)}</div>
+          </div>
+          ${ev.notes?`<div style="font-size:11.5px;color:var(--g7);margin-top:6px;line-height:1.6">${ev.notes}</div>`:''}
+        </div>
+      </div>`).join('')}`).join('')}
+  </div>`;
+}
+
+async function delTL(id){
+  if(!confirm(lang==='bn'?'মুছে ফেলবেন?':'Delete this?')) return;
+  try{
+    await sbDelete('timeline',id);
+    db.timeline=db.timeline.filter(v=>v.id!==id);
+    renderTimeline(); showToast(t('deleted'));
+  }catch(e){showToast('⚠️ '+t('connErr'));}
 }
 
 // ══════════════════════════════

@@ -197,6 +197,21 @@ textarea{resize:vertical;min-height:65px}
 .tl-card{background:#fff;border-radius:10px;padding:11px;box-shadow:var(--sh);cursor:pointer}
 .tl-yr{font-size:10px;color:var(--g5);margin-bottom:9px;font-weight:700}
 
+/* TEST CATEGORIES */
+.tcat-btn{background:var(--g1);color:var(--g7);border:1.5px solid var(--g3);border-radius:18px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--f);white-space:nowrap;flex-shrink:0}
+.tcat-btn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.cat-chip{background:var(--g1);border:1.5px solid var(--g3);border-radius:9px;padding:8px 6px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;color:var(--g7);transition:all .15s}
+.cat-chip.active{background:var(--teal-light);border-color:var(--teal);color:var(--teal);font-weight:700}
+.status-chip{flex:1;background:var(--g1);border:1.5px solid var(--g3);border-radius:8px;padding:8px 4px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;color:var(--g7)}
+.status-chip.active{border-width:2px}
+#st-normal.active{background:#dcfce7;border-color:#10b981;color:#065f46}
+#st-attention.active{background:#fef3c7;border-color:#f59e0b;color:#78350f}
+#st-abnormal.active{background:#fee2e2;border-color:#ef4444;color:#7f1d1d}
+.tst-result-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--g1);font-size:12px}
+.tst-result-row:last-child{border-bottom:none}
+.tst-result-label{color:var(--g5);font-weight:500}
+.tst-result-val{font-weight:700;color:var(--g9)}
+
 /* PDF */
 .pdf-btn{width:100%;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:var(--f);display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px}
 
@@ -358,7 +373,30 @@ textarea{resize:vertical;min-height:65px}
 
 <!-- TESTS -->
 <div class="pg" id="pg-tests">
-  <div class="sh"><div class="st" id="sl-tr"></div><button class="badd" onclick="om('tst')">+ <span id="sl-add3"></span></button></div>
+  <!-- Category Filter -->
+  <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none">
+    <button class="tcat-btn active" onclick="filterTst('all')" id="tc-all">সব</button>
+    <button class="tcat-btn" onclick="filterTst('blood')" id="tc-blood">🩸 রক্ত</button>
+    <button class="tcat-btn" onclick="filterTst('urine')" id="tc-urine">🚽 প্রস্রাব</button>
+    <button class="tcat-btn" onclick="filterTst('biochem')" id="tc-biochem">🧪 বায়োকেম</button>
+    <button class="tcat-btn" onclick="filterTst('imaging')" id="tc-imaging">🩻 ইমেজিং</button>
+    <button class="tcat-btn" onclick="filterTst('other')" id="tc-other">📋 অন্যান্য</button>
+  </div>
+  <div class="sh">
+    <div class="st" id="sl-tr"></div>
+    <button class="badd" onclick="om('tst')">+ <span id="sl-add3"></span></button>
+  </div>
+  <!-- AI Summary Button -->
+  <div id="tstAISumBtn" style="display:none;margin-bottom:10px">
+    <button onclick="genTstSummary()" style="width:100%;background:linear-gradient(135deg,var(--purple),#9f67fa);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--f);display:flex;align-items:center;justify-content:center;gap:6px">
+      🤖 <span id="sl-aiSumBtn">AI স্বাস্থ্য সারাংশ তৈরি করুন</span>
+    </button>
+  </div>
+  <!-- AI Summary Result -->
+  <div id="tstAISumResult" style="display:none;background:var(--purple-light);border:1px solid #ddd6fe;border-radius:11px;padding:13px;margin-bottom:12px">
+    <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:7px">🤖 AI স্বাস্থ্য সারাংশ</div>
+    <div id="tstAISumText" style="font-size:12px;color:var(--g9);line-height:1.75"></div>
+  </div>
   <div id="tstList"></div>
 </div>
 
@@ -477,13 +515,94 @@ textarea{resize:vertical;min-height:65px}
   <button class="mbtn can" onclick="cm('med')"><span id="ml-cn2"></span></button>
 </div></div>
 
-<div class="ov" id="mo-tst"><div class="modal"><div class="mh"></div><div class="mt">🧪 <span id="ml-aT"></span></div>
-  <div class="fg"><label id="ml-tN"></label><input id="t-nm" type="text"></div>
-  <div class="fr"><div class="fg"><label id="ml-tDt"></label><input id="t-dt" type="date"></div><div class="fg"><label id="ml-tLb"></label><input id="t-lb" type="text"></div></div>
-  <div class="fg"><label id="ml-tRs"></label><textarea id="t-rs"></textarea></div>
-  <div class="fg"><label id="ml-tNr"></label><input id="t-nr" type="text"></div>
-  <div class="fg"><label id="ml-tSt"></label><select id="t-st"><option value="normal" id="o-nr"></option><option value="abnormal" id="o-ab"></option><option value="pending" id="o-pd"></option></select></div>
-  <div class="fg"><label id="ml-tNo"></label><textarea id="t-no" style="min-height:50px"></textarea></div>
+<div class="ov" id="mo-tst"><div class="modal"><div class="mh"></div>
+  <div class="mt">🧪 <span id="ml-aT"></span></div>
+
+  <!-- Step 1: Category -->
+  <div class="fg">
+    <label id="ml-tCat">পরীক্ষার ধরন *</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px" id="catGrid">
+      <div class="cat-chip" onclick="selCat('blood')" id="chip-blood">🩸 CBC/রক্ত</div>
+      <div class="cat-chip" onclick="selCat('urine')" id="chip-urine">🚽 Urine</div>
+      <div class="cat-chip" onclick="selCat('biochem')" id="chip-biochem">🧪 Biochem</div>
+      <div class="cat-chip" onclick="selCat('xray')" id="chip-xray">🩻 X-Ray</div>
+      <div class="cat-chip" onclick="selCat('usg')" id="chip-usg">🖥️ USG</div>
+      <div class="cat-chip" onclick="selCat('mri')" id="chip-mri">🧲 MRI/CT</div>
+      <div class="cat-chip" onclick="selCat('ecg')" id="chip-ecg">❤️ ECG</div>
+      <div class="cat-chip" onclick="selCat('other')" id="chip-other">📋 অন্যান্য</div>
+    </div>
+  </div>
+
+  <!-- Common Fields -->
+  <div class="fg"><label id="ml-tN">পরীক্ষার নাম *</label><input id="t-nm" type="text" placeholder="যেমন: CBC, X-Ray Lumbar Spine"></div>
+  <div class="fr">
+    <div class="fg"><label id="ml-tDt">তারিখ</label><input id="t-dt" type="date"></div>
+    <div class="fg"><label id="ml-tLb">হাসপাতাল/ল্যাব</label><input id="t-lb" type="text"></div>
+  </div>
+  <div class="fg"><label id="ml-tDc">চিকিৎসক</label><input id="t-dc" type="text"></div>
+
+  <!-- CBC Fields -->
+  <div id="fields-blood" class="tst-fields" style="display:none">
+    <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px;margin-top:4px">🩸 CBC ফলাফল</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="fg"><label>Hb (g/dL)</label><input id="f-hb" type="number" step="0.1" placeholder="12.6"></div>
+      <div class="fg"><label>WBC (×10⁹/L)</label><input id="f-wbc" type="number" step="0.01" placeholder="5.52"></div>
+      <div class="fg"><label>Platelet (×10⁹/L)</label><input id="f-plt" type="number" placeholder="229"></div>
+      <div class="fg"><label>ESR (mm/1hr)</label><input id="f-esr" type="number" placeholder="16"></div>
+      <div class="fg"><label>PCV/HCT (%)</label><input id="f-hct" type="number" step="0.1" placeholder="37.6"></div>
+      <div class="fg"><label>RBC (×10¹²/L)</label><input id="f-rbc" type="number" step="0.01" placeholder="4.27"></div>
+    </div>
+  </div>
+
+  <!-- Biochemistry Fields -->
+  <div id="fields-biochem" class="tst-fields" style="display:none">
+    <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px;margin-top:4px">🧪 Biochemistry ফলাফল</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="fg"><label>Glucose Fasting</label><input id="f-gf" type="number" step="0.1" placeholder="7.7 mmol/L"></div>
+      <div class="fg"><label>1hr After Glucose</label><input id="f-g1" type="number" step="0.1" placeholder="11.1"></div>
+      <div class="fg"><label>2hr After Glucose</label><input id="f-g2" type="number" step="0.1" placeholder="8.4"></div>
+      <div class="fg"><label>Creatinine (mg/dL)</label><input id="f-cr" type="number" step="0.01" placeholder="0.77"></div>
+      <div class="fg"><label>SGPT/ALT</label><input id="f-sgpt" type="number" placeholder=""></div>
+      <div class="fg"><label>SGOT/AST</label><input id="f-sgot" type="number" placeholder=""></div>
+      <div class="fg"><label>Total Cholesterol</label><input id="f-chol" type="number" placeholder=""></div>
+      <div class="fg"><label>Uric Acid</label><input id="f-ua" type="number" step="0.1" placeholder=""></div>
+    </div>
+  </div>
+
+  <!-- Urine Fields -->
+  <div id="fields-urine" class="tst-fields" style="display:none">
+    <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px;margin-top:4px">🚽 Urine ফলাফল</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="fg"><label>Colour</label><input id="f-ucol" type="text" placeholder="Straw"></div>
+      <div class="fg"><label>Appearance</label><input id="f-uapp" type="text" placeholder="Clear"></div>
+      <div class="fg"><label>Protein</label><input id="f-upro" type="text" placeholder="Nil"></div>
+      <div class="fg"><label>Sugar</label><input id="f-usug" type="text" placeholder="Nil"></div>
+      <div class="fg"><label>Pus Cell (/HPF)</label><input id="f-upus" type="text" placeholder="0-2"></div>
+      <div class="fg"><label>RBC (/HPF)</label><input id="f-urbc" type="text" placeholder="Nil"></div>
+    </div>
+  </div>
+
+  <!-- Imaging Fields (X-Ray, USG, MRI, CT) -->
+  <div id="fields-imaging" class="tst-fields" style="display:none">
+    <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px;margin-top:4px">🩻 Findings / ফলাফল</div>
+    <div class="fg"><label>Body Part / অঙ্গ</label><input id="f-part" type="text" placeholder="যেমন: Lumbar Spine, Whole Abdomen"></div>
+    <div class="fg"><label>Findings</label><textarea id="f-find" style="min-height:80px" placeholder="যেমন: Degenerative change of lumbar spine..."></textarea></div>
+    <div class="fg"><label>Impression / Comment</label><textarea id="f-imp" style="min-height:60px" placeholder="ডাক্তারের মন্তব্য..."></textarea></div>
+  </div>
+
+  <!-- General Result -->
+  <div class="fg"><label id="ml-tRs">সংক্ষিপ্ত সারাংশ / অন্যান্য ফলাফল</label><textarea id="t-rs" style="min-height:55px" placeholder="যেকোনো অতিরিক্ত তথ্য..."></textarea></div>
+
+  <!-- Status -->
+  <div class="fg">
+    <label id="ml-tSt">অবস্থা</label>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <div class="status-chip active" onclick="selStatus('normal')" id="st-normal">🟢 স্বাভাবিক</div>
+      <div class="status-chip" onclick="selStatus('attention')" id="st-attention">🟡 পর্যবেক্ষণ</div>
+      <div class="status-chip" onclick="selStatus('abnormal')" id="st-abnormal">🔴 অস্বাভাবিক</div>
+    </div>
+  </div>
+
   <button class="mbtn pri" onclick="saveTst()">💾 <span id="ml-sv3"></span></button>
   <button class="mbtn can" onclick="cm('tst')"><span id="ml-cn3"></span></button>
 </div></div>
